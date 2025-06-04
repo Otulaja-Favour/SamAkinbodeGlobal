@@ -15,6 +15,25 @@ const router = createRouter({
      
       component: () => import('../views/userdashboard.vue'),
     },
+    {
+      path: '/books',
+      name: 'books',
+     
+      component: () => import('../views/books.vue'),
+    },
+    {
+      path: '/cart',
+      name: 'cart',
+     
+      component: () => import('../views/cart.vue'),
+    },
+     {
+      path: '/profile',
+      name: 'profile',
+     
+      component: () => import('../views/dashboard.vue'),
+    },
+    
   ],
 })
 
