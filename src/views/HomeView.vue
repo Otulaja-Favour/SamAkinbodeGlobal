@@ -1,81 +1,88 @@
 <template>
-  <div class="container-fluid">
+  <div class="container-fluid p-4">
     <div class="landingPage">
-      <div class="imageAspect">
-        <img src="../assets/images/JARIPEO.jpeg" alt="">
-      </div>
-      <div class="authentications">
-        <h3 v-if="isLogin">Login into your dashboard</h3>
-        <h3 v-else>Sign up for an account</h3>
-        <div class="loginAspect">
-          <template v-if="isLogin">
+      <transition name="slide-left">
+
+        <div class="imageAspect" v-if="showPage">
+          <img src="../assets/images/JARIPEO.jpeg" alt="">
+        </div>
+      </transition>
+
+      <transition name="slide-right">
+
+        <div class="authentications" v-if="showPage">
+          <h3 class="text-center" v-if="isLogin">Welcome back</h3>
+          <h3 class="text-center" v-else>Join site name</h3>
+          <div class="loginAspect">
+            <template v-if="isLogin">
             <label for="email" class="form-label">Email</label>
             <input type="email" class="form-control form-control-lg" id="email" placeholder="Enter Email" v-model="email">
             <div v-if="errors.email" class="error-msg">
               {{ errors.email }}
             </div>
-
-            <label for="password">Password</label>
-            <input type="password" id="password" placeholder="Enter Password" v-model="password">
+            
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control form-control-lg" id="password" placeholder="Enter Password" v-model="password">
             <div v-if="errors.password" class="error-msg">
               {{ errors.password }}
             </div>
-            <button @click="validateLogin">Login</button>
-            <p>Don't have an account? <span @click="toggleForm" style="color:blue;cursor:pointer;">Create account</span></p>
+            <button class="btn btn-primary my-4 center-btn" @click="validateLogin">Login</button>
+            <p class="text-center">Don't have an account? <span @click="toggleForm" style="color:blue;cursor:pointer;">Create account</span></p>
           </template>
+          
+          
           <template v-else>
-            <label for="FirstName">First Name</label>
-            <input type="text" id="FirstName" placeholder="Enter first name" v-model="firstName">
+            <label for="FirstName" class="form-label">First Name</label>
+            <input type="text" class="form-control form-control-lg" id="FirstName" placeholder="Enter first name" v-model="firstName">
             <div v-if="errors.firstName" class="error-msg">
               {{ errors.firstName }}
             </div>
-
-            <label for="lastName">Last Name</label>
-            <input type="text" id="lastName" placeholder="Enter last name" v-model="lastName">
+            
+            <label for="lastName" class="form-label">Last Name</label>
+            <input type="text" class="form-control form-control-lg" id="lastName" placeholder="Enter last name" v-model="lastName">
             <div v-if="errors.lastName" class="error-msg">
               {{ errors.lastName }}
             </div>
-
-            <label for="email">Email</label>
-            <input type="email" id="email" placeholder="Enter Email" v-model="email">
+            
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control form-control-lg" id="email" placeholder="Enter Email" v-model="email">
             <div v-if="errors.email" class="error-msg">
               {{ errors.email }}
             </div>
-
-            <label for="age">Age</label>
-            <input type="number" id="age" placeholder="Enter age" v-model="age">
+            
+            <label for="age" class="form-label">Age</label>
+            <input type="number" class="form-control form-control-lg" id="age" placeholder="Enter age" v-model="age">
             <div v-if="errors.age" class="error-msg">
               {{ errors.age }}
             </div>
-
-             <label for="phoneNumber">Phone Number</label>
-            <input type="text" id="phoneNumber" placeholder="Enter phone number" v-model="phoneNumber">
+            
+            <label for="phoneNumber" class="form-label">Phone Number</label>
+            <input type="number" class="form-control form-control-lg" id="phoneNumber" placeholder="Enter phone number" v-model="phoneNumber">
             <div v-if="errors.phoneNumber" class="error-msg">
               {{ errors.phoneNumber }}
             </div>
-
-            <label for="password">Password</label>
-            <input type="password" id="password" placeholder="Enter Password" v-model="password">
+            
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control form-control-lg" id="password" placeholder="Enter Password" v-model="password">
             <div v-if="errors.password" class="error-msg">
               {{ errors.password }}
             </div>
-
-            <label for="confirmPassword">Confirm Password</label>
-            <input type="password" id="confirmPassword" placeholder="Confirm Password" v-model="confirmpassword">
+            
+            <label for="confirmPassword" class="form-label">Confirm Password</label>
+            <input type="password" class="form-control form-control-lg" id="confirmPassword" placeholder="Confirm Password" v-model="confirmpassword">
             <div v-if="errors.confirmPassword" class="error-msg">
               {{ errors.confirmPassword }}
             </div>
-
-            <button @click="validateSignUp">Sign Up</button>
-            <p>Already have an account? <span @click="toggleForm" style="color:blue;cursor:pointer;">Login</span></p>
+            
+            <button class="btn btn-success my-4 center-btn" @click="validateSignUp">Sign Up</button>
+            <p class="text-center">Already have an account? <span @click="toggleForm" style="color:blue;cursor:pointer;">Login</span></p>
           </template>
         </div>
+        
       </div>
+    </transition>
     </div>
-    <div v-if="centerSpinner" class="center-spinner-overlay">
-      <div class="center-spinner"></div>
-      <div style="text-align:center;color:#1976d2;margin-top:15px;">Please wait...</div>
-    </div>
+    
   </div>
 </template>
 <script>
@@ -94,9 +101,15 @@ export default {
       password: '',
       confirmpassword: '',
       errors: {},
-      centerSpinner: false
+      showPage: false
     }
   },
+
+mounted() {
+    this.showPage = true;
+  },
+
+
   methods: {
     toggleForm() {
       this.isLogin = !this.isLogin;
@@ -209,3 +222,100 @@ this.toggleForm();
   }
 }
 </script>
+<style scoped>
+.error-msg{
+  color: red;
+}
+label{
+  margin-top: 10px !important;
+}
+.landingPage{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center !important;
+  min-height: 100vh;     
+  height: 100vh;          
+  box-sizing: border-box;
+}
+.imageAspect{
+  margin-top: 10px;
+  width: 50%;
+  height: 600px;
+overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid green;
+  border-radius: 30px
+
+}
+.imageAspect img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 30px
+}
+.authentications{
+  padding: 40px;
+  width: 40%;
+  
+   max-height: 600px;      
+  overflow-y: auto; 
+}
+.center-btn{
+  width: 100% !important;
+padding: 10px 0px;
+}
+
+
+.slide-left-enter-active {
+  animation: slideInLeft 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+@keyframes slideInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-right-enter-active {
+  animation: slideInRight 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+  @media screen and (max-width:700px) {
+  .imageAspect{
+    width: 100%;
+    border-radius: 1px ;
+    margin-bottom: 20px;
+  }
+  .imageAspect img{
+    border-radius: 1px;
+  }
+  .authentications{
+    width: 100%;
+    padding: 0;
+  }
+  .landingPage{
+    flex-direction: column;
+  }
+}
+
+
+
+</style>
