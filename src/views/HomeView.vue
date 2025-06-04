@@ -1,6 +1,9 @@
 <template>
   <div class="container-fluid p-4">
     <div class="landingPage">
+
+
+
       <transition name="slide-left">
 
         <div class="imageAspect" v-if="showPage">
@@ -298,24 +301,39 @@ padding: 10px 0px;
   }
 }
 
-  @media screen and (max-width:700px) {
-  .imageAspect{
-    width: 100%;
-    border-radius: 1px ;
-    margin-bottom: 20px;
-  }
-  .imageAspect img{
-    border-radius: 1px;
-  }
-  .authentications{
-    width: 100%;
-    padding: 0;
-  }
-  .landingPage{
+  @media screen and (max-width: 700px) {
+  .landingPage {
+    position: relative;
     flex-direction: column;
+    align-items: stretch !important;
+    min-height: unset;
+    height: auto;
+    background-image: url('../assets/images/JARIPEO.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* Add a dark overlay using a pseudo-element */
+  }
+  .landingPage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.4); /* Adjust opacity here */
+    z-index: 0;
+    pointer-events: none;
+  }
+  .authentications {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    padding: 16px;
+    max-height: unset;
+    background: rgba(255,255,255,0.95); 
+    box-shadow: 0px 0px 10px 0px;
+  }
+  .imageAspect {
+    display: none;
   }
 }
-
-
 
 </style>
