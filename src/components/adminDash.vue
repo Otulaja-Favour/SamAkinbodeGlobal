@@ -42,7 +42,7 @@
     <!-- Spacer to prevent navbar overlap on desktop -->
     <div class="admin-navbar-spacer d-none d-lg-block"></div>
 
-    <!-- Responsive bottom nav for mobile (icons only) -->
+    <!-- Responsive bottom nav for mobile (icons only, no text) -->
     <nav class="admin-bottom-nav d-lg-none">
       <ul>
         <li v-for="item in sidebarItems" :key="item.tab">
@@ -52,14 +52,11 @@
             @click="adminTab = item.tab"
           >
             <i :class="item.icon"></i>
-            <!-- Hide label on mobile -->
-            <span class="nav-label-mobile">{{ item.label }}</span>
           </button>
         </li>
         <li>
           <button class="btn btn-link" @click="logout">
             <i class="fas fa-user-shield"></i>
-            <span class="nav-label-mobile">Admin</span>
           </button>
         </li>
       </ul>
@@ -70,9 +67,218 @@
 
     <div class="container-fluid conc">
       <section class="displayAside">
-        <!-- ...rest of your code remains unchanged... -->
-        <!-- Overview, Manage Books, Manage Users, Appointments, Transactions -->
-        <!-- ... -->
+        <!-- Overview -->
+        <div v-if="adminTab === 'overview'">
+          <h4>Welcome Admin!</h4>
+          <div class="row mt-4">
+            <div class="col-md-3 mb-3">
+              <div class="card text-center">
+                <div class="card-body">
+                  <i class="fas fa-book fa-2x text-primary mb-2"></i>
+                  <h5 class="card-title">{{ books.length }}</h5>
+                  <p class="card-text">Total Books</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <div class="card text-center">
+                <div class="card-body">
+                  <i class="fas fa-users fa-2x text-success mb-2"></i>
+                  <h5 class="card-title">{{ users.length }}</h5>
+                  <p class="card-text">Total Users</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <div class="card text-center">
+                <div class="card-body">
+                  <i class="fas fa-calendar-alt fa-2x text-warning mb-2"></i>
+                  <h5 class="card-title">{{ appointments.length }}</h5>
+                  <p class="card-text">Appointments</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <div class="card text-center">
+                <div class="card-body">
+                  <i class="fas fa-receipt fa-2x text-info mb-2"></i>
+                  <h5 class="card-title">{{ transactions.length }}</h5>
+                  <p class="card-text">Transactions</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Manage Books -->
+        <div v-else-if="adminTab === 'books'">
+          <h4>Manage Books</h4>
+          <!-- Add Book Form -->
+          <form @submit.prevent="addOrUpdateBook" class="mb-4">
+            <div class="row g-2">
+              <div class="col-md-3">
+                <input v-model="bookForm.title" type="text" class="form-control" placeholder="Title" required>
+              </div>
+              <div class="col-md-3">
+                <input v-model="bookForm.author" type="text" class="form-control" placeholder="Author" required>
+              </div>
+              <div class="col-md-2">
+                <input v-model="bookForm.price" type="number" class="form-control" placeholder="Price" required>
+              </div>
+              <div class="col-md-2">
+                <input v-model="bookForm.rent" type="number" class="form-control" placeholder="Rent" required>
+              </div>
+              <div class="col-md-2">
+                <input v-model="bookForm.image" type="text" class="form-control" placeholder="Image URL">
+              </div>
+            </div>
+            <div class="row g-2 mt-2">
+              <div class="col-md-8">
+                <input v-model="bookForm.description" type="text" class="form-control" placeholder="Description">
+              </div>
+              <div class="col-md-2">
+                <select v-model="bookForm.action" class="form-control" required>
+                  <option disabled value="">Select Type</option>
+                  <option value="broughtBook">Buy</option>
+                  <option value="borrowedBook">Rent</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <button class="btn btn-success w-100" type="submit">
+                  {{ bookForm.id ? "Update" : "Add" }} Book
+                </button>
+              </div>
+            </div>
+          </form>
+          <div v-if="books.length === 0" class="alert alert-info">No books available.</div>
+          <div class="table-responsive" v-else>
+            <table class="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Author</th>
+                  <th>Type</th>
+                  <th>Price</th>
+                  <th>Rent</th>
+                  <th>Description</th>
+                  <th>Image</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="book in books" :key="book.id">
+                  <td>{{ book.title }}</td>
+                  <td>{{ book.author }}</td>
+                  <td>{{ book.action === 'broughtBook' ? 'Buy' : 'Rent' }}</td>
+                  <td>₦{{ book.price }}</td>
+                  <td>₦{{ book.rent }}</td>
+                  <td>{{ book.description }}</td>
+                  <td>
+                    <img v-if="book.image" :src="book.image" alt="Book" style="width:40px;height:40px;object-fit:cover;">
+                  </td>
+                  <td>
+                    <button class="btn btn-primary btn-sm me-1" @click="editBook(book)">Edit</button>
+                    <button class="btn btn-danger btn-sm" @click="deleteBook(book.id)">Delete</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Manage Users -->
+        <div v-else-if="adminTab === 'users'">
+          <h4>Manage Users</h4>
+          <div v-if="users.length === 0" class="alert alert-info">No users found.</div>
+          <div class="table-responsive" v-else>
+            <table class="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Age</th>
+                  <th>Phone</th>
+                  <th>Role</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="user in users" :key="user.id">
+                  <td>{{ user.firstName }} {{ user.lastName }}</td>
+                  <td>{{ user.email }}</td>
+                  <td>{{ user.age }}</td>
+                  <td>{{ user.phoneNumber }}</td>
+                  <td>{{ user.role }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Appointments -->
+        <div v-else-if="adminTab === 'appointments'">
+          <h4>All Appointments</h4>
+          <div v-if="appointments.length === 0" class="alert alert-info">No appointments found.</div>
+          <div class="table-responsive" v-else>
+            <table class="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Subject</th>
+                  <th>Details</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="app in appointments" :key="app.id || app.date">
+                  <td>
+                    <span v-if="getUser(app.userId)">
+                      {{ getUser(app.userId).firstName }} {{ getUser(app.userId).lastName }}
+                    </span>
+                    <span v-else>{{ app.userId }}</span>
+                  </td>
+                  <td>{{ app.subject }}</td>
+                  <td>{{ app.details }}</td>
+                  <td>{{ app.date }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- All Transactions -->
+        <div v-else-if="adminTab === 'transactions'">
+          <h4>All Transactions</h4>
+          <div v-if="transactions.length === 0" class="alert alert-info">No transactions found.</div>
+          <div class="table-responsive" v-else>
+            <table class="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th>Book</th>
+                  <th>User</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Date</th>
+                  <th>Reference</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="tx in transactions" :key="tx.reference">
+                  <td>{{ tx.title }}</td>
+                  <td>
+                    <span v-if="getUser(tx.userId)">
+                      {{ getUser(tx.userId).firstName }} {{ getUser(tx.userId).lastName }}
+                    </span>
+                    <span v-else>{{ tx.userId }}</span>
+                  </td>
+                  <td>{{ tx.type }}</td>
+                  <td>₦{{ tx.price }}</td>
+                  <td>{{ tx.date }}</td>
+                  <td>{{ tx.reference }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
     </div>
   </div>
@@ -95,19 +301,58 @@ export default {
       books: [],
       users: [],
       appointments: [],
-      transactions: []
+      transactions: [],
+      bookForm: {
+        id: "",
+        title: "",
+        author: "",
+        price: "",
+        rent: "",
+        image: "",
+        description: "",
+        action: ""
+      }
     };
   },
   async mounted() {
-    this.books = await mockstorage.fetchAllBooks();
-    this.users = await mockstorage.fetchUsers();
-    this.appointments = await mockstorage.fetchAllAppointments();
-    this.transactions = await mockstorage.fetchAllTransactions();
+    await this.fetchAllData();
   },
   methods: {
+    async fetchAllData() {
+      this.books = await mockstorage.fetchAllBooks();
+      this.users = await mockstorage.fetchUsers();
+      this.appointments = await mockstorage.fetchAllAppointments();
+      this.transactions = await mockstorage.fetchAllTransactions();
+    },
+    async addOrUpdateBook() {
+      const book = { ...this.bookForm };
+      // If editing, update; else, add new
+      if (book.id) {
+        await mockstorage.updateBook(book.id, book);
+      } else {
+        await mockstorage.addBook(book);
+      }
+      await this.fetchAllData();
+      this.resetBookForm();
+    },
+    editBook(book) {
+      this.bookForm = { ...book };
+    },
     async deleteBook(bookId) {
       await mockstorage.deleteBook(bookId);
-      this.books = await mockstorage.fetchAllBooks();
+      await this.fetchAllData();
+    },
+    resetBookForm() {
+      this.bookForm = {
+        id: "",
+        title: "",
+        author: "",
+        price: "",
+        rent: "",
+        image: "",
+        description: "",
+        action: ""
+      };
     },
     logout() {
       this.$router.push('/');
@@ -120,18 +365,14 @@ export default {
 </script>
 
 <style scoped>
-/* Navbar spacing for desktop */
 .admin-navbar-spacer {
-  height: 56px; /* Adjust if your navbar is taller */
+  height: 56px;
   width: 100%;
 }
-
-/* Bottom nav spacing for mobile */
 .admin-bottom-nav-spacer {
-  height: 56px; /* Same as .admin-bottom-nav height */
+  height: 56px;
   width: 100%;
 }
-
 .conc {
   margin-top: 20px;
   display: flex;
@@ -202,11 +443,6 @@ export default {
   background: #0d6efd;
   border-radius: 0;
 }
-.nav-label-mobile {
-  display: none;
-}
-
-/* Responsive: Hide text on mobile bottom nav, show on desktop top nav */
 @media (max-width: 900px) {
   .conc {
     flex-direction: column;
@@ -224,9 +460,6 @@ export default {
     display: flex;
   }
   .nav-label {
-    display: none !important;
-  }
-  .nav-label-mobile {
     display: none !important;
   }
 }

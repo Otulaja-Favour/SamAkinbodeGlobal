@@ -45,7 +45,6 @@
     </div>
   </div>
 </template>
-
 <script>
 import mockstorage from '@/stores/mockstorage';
 
@@ -64,7 +63,6 @@ export default {
   },
   async mounted() {
     window.addEventListener('cart-updated', this.updateCart);
-    // Optionally fetch user email for payment
     if (this.userId) {
       const user = await mockstorage.fetchUser(this.userId);
       this.userEmail = user?.email || '';
@@ -112,9 +110,12 @@ export default {
         return;
       }
       const now = new Date().toLocaleString();
-      let broughtBooks = [];
-      let borrowedBooks = [];
-      let transactionHistory = [];
+      let user = await mockstorage.fetchUser(this.userId);
+
+      // Prepare arrays if not present
+      if (!user.broughtBooks) user.broughtBooks = [];
+      if (!user.borrowedBooks) user.borrowedBooks = [];
+      if (!user.transactionHistory) user.transactionHistory = [];
 
       this.cart.forEach(item => {
         const bookData = {
@@ -122,16 +123,16 @@ export default {
           userId: this.userId,
         };
         if (item.action === 'buy') {
-          broughtBooks.push(bookData);
-          transactionHistory.push({
+          user.broughtBooks.push(bookData);
+          user.transactionHistory.push({
             ...bookData,
             type: 'buy',
             date: now,
             reference: response.reference
           });
         } else if (item.action === 'borrow') {
-          borrowedBooks.push(bookData);
-          transactionHistory.push({
+          user.borrowedBooks.push(bookData);
+          user.transactionHistory.push({
             ...bookData,
             type: 'borrow',
             date: now,
@@ -140,26 +141,18 @@ export default {
         }
       });
 
-      // Save to mockstorage API (per user)
+      // Save updated user to API
       try {
-        await mockstorage.saveBroughtBooks(broughtBooks, this.userId);
-        await mockstorage.saveBorrowedBooks(borrowedBooks, this.userId);
-        await mockstorage.saveTransactionHistory(transactionHistory, this.userId);
+        await mockstorage.updateUser(this.userId, user);
       } catch (e) {
         alert('Failed to save to server. Please try again.');
         return;
       }
 
       // Optionally: Save to localStorage (per user, if needed)
-      localStorage.setItem(`broughtBooks_${this.userId}`, JSON.stringify(
-        (JSON.parse(localStorage.getItem(`broughtBooks_${this.userId}`)) || []).concat(broughtBooks)
-      ));
-      localStorage.setItem(`borrowedBooks_${this.userId}`, JSON.stringify(
-        (JSON.parse(localStorage.getItem(`borrowedBooks_${this.userId}`)) || []).concat(borrowedBooks)
-      ));
-      localStorage.setItem(`transactionHistory_${this.userId}`, JSON.stringify(
-        (JSON.parse(localStorage.getItem(`transactionHistory_${this.userId}`)) || []).concat(transactionHistory)
-      ));
+      localStorage.setItem(`broughtBooks_${this.userId}`, JSON.stringify(user.broughtBooks));
+      localStorage.setItem(`borrowedBooks_${this.userId}`, JSON.stringify(user.borrowedBooks));
+      localStorage.setItem(`transactionHistory_${this.userId}`, JSON.stringify(user.transactionHistory));
 
       // Clear cart
       localStorage.removeItem('cart');

@@ -189,5 +189,59 @@ export default {
     } else {
       return await this.updateUser(user.id, user);
     }
-  }
+  },
+
+  // ----------- ADMIN DASHBOARD FETCHERS -----------
+
+  // Fetch all books (for admin)
+  async fetchAllBooks() {
+    try {
+      const users = await this.fetchUsers();
+      // Books are those with type 'broughtBook' or 'borrowedBook'
+      return users.filter(u => u.type === 'broughtBook' || u.type === 'borrowedBook');
+    } catch {
+      const localBrought = JSON.parse(localStorage.getItem('broughtBooks') || '[]');
+      const localBorrowed = JSON.parse(localStorage.getItem('borrowedBooks') || '[]');
+      return [...localBrought, ...localBorrowed];
+    }
+  },
+
+  // Fetch all appointments (for admin)
+  async fetchAllAppointments() {
+    try {
+      const users = await this.fetchUsers();
+      return users.filter(u => u.type === 'appointment');
+    } catch {
+      return JSON.parse(localStorage.getItem('appointments') || '[]');
+    }
+  },
+
+  // Fetch all transactions (for admin)
+  async fetchAllTransactions() {
+    try {
+      const users = await this.fetchUsers();
+      return users.filter(u => u.type === 'transaction');
+    } catch {
+      return JSON.parse(localStorage.getItem('transactionHistory') || '[]');
+    }
+  },
+
+  // Add these methods to your export default object
+
+async addBook(book) {
+  // book.type should be 'broughtBook' or 'borrowedBook'
+  const response = await axios.post('https://683efaf01cd60dca33ddd10d.mockapi.io/users', book);
+  return response.data;
+},
+
+async updateBook(id, book) {
+  const response = await axios.put(`https://683efaf01cd60dca33ddd10d.mockapi.io/users/${id}`, book);
+  return response.data;
+},
+
+async deleteBook(id) {
+  const response = await axios.delete(`https://683efaf01cd60dca33ddd10d.mockapi.io/users/${id}`);
+  return response.data;
+},
+  
 };
