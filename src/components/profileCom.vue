@@ -14,10 +14,7 @@
           <i :class="item.icon"></i>
           <span class="sidebar-label">{{ item.label }}</span>
         </div>
-        <div class="mt-4 text-center">
-          <div class="fw-bold">Total Books</div>
-          <div class="text-primary fs-5">{{ totalBooks }}</div>
-        </div>
+        <!--  -->
       </aside>
 
       <!-- Main Content -->
@@ -425,7 +422,8 @@ export default {
   .asideBar {
     width: 100%;
     min-width: 0;
-    flex-direction: row;
+    display: flex; /* Make sidebar a flex container */
+    flex-direction: row; /* Row direction for horizontal layout */
     justify-content: space-around;
     align-items: stretch;
     padding: 0;
@@ -445,6 +443,7 @@ export default {
     font-size: 0.95rem;
     width: 100%;
     min-width: 0;
+    flex: 1 1 0;
   }
   .sidebar-label {
     display: none;

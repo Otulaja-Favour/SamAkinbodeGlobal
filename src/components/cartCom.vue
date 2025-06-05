@@ -47,12 +47,14 @@
 </template>
 
 <script>
-import mockstorage from '@/stores/mockstorage'; // Adjust path as needed
+import mockstorage from '@/stores/mockstorage';
 
 export default {
   data() {
     return {
       cart: JSON.parse(localStorage.getItem('cart')) || [],
+      userId: localStorage.getItem('userId') || null,
+      userEmail: '',
     };
   },
   computed: {
@@ -60,8 +62,13 @@ export default {
       return this.cart.reduce((sum, item) => sum + Number(item.price || 0), 0);
     },
   },
-  mounted() {
+  async mounted() {
     window.addEventListener('cart-updated', this.updateCart);
+    // Optionally fetch user email for payment
+    if (this.userId) {
+      const user = await mockstorage.fetchUser(this.userId);
+      this.userEmail = user?.email || '';
+    }
   },
   beforeUnmount() {
     window.removeEventListener('cart-updated', this.updateCart);
@@ -76,7 +83,7 @@ export default {
       window.dispatchEvent(new CustomEvent('cart-updated', { detail: this.cart.length }));
     },
     checkout() {
-      const email = this.cart[0]?.email || "test@example.com";
+      const email = this.userEmail || this.cart[0]?.email || "test@example.com";
       const amount = this.totalPrice * 100;
 
       if (!window.PaystackPop) {
@@ -100,25 +107,32 @@ export default {
       handler.openIframe();
     },
     async handlePaymentSuccess(response) {
-      // Prepare arrays
+      if (!this.userId) {
+        alert('User not found. Please log in again.');
+        return;
+      }
       const now = new Date().toLocaleString();
       let broughtBooks = [];
       let borrowedBooks = [];
       let transactionHistory = [];
 
       this.cart.forEach(item => {
+        const bookData = {
+          ...item,
+          userId: this.userId,
+        };
         if (item.action === 'buy') {
-          broughtBooks.push(item);
+          broughtBooks.push(bookData);
           transactionHistory.push({
-            ...item,
+            ...bookData,
             type: 'buy',
             date: now,
             reference: response.reference
           });
         } else if (item.action === 'borrow') {
-          borrowedBooks.push(item);
+          borrowedBooks.push(bookData);
           transactionHistory.push({
-            ...item,
+            ...bookData,
             type: 'borrow',
             date: now,
             reference: response.reference
@@ -126,25 +140,25 @@ export default {
         }
       });
 
-      // Save to mockstorage API
+      // Save to mockstorage API (per user)
       try {
-        await mockstorage.saveBroughtBooks(broughtBooks);
-        await mockstorage.saveBorrowedBooks(borrowedBooks);
-        await mockstorage.saveTransactionHistory(transactionHistory);
+        await mockstorage.saveBroughtBooks(broughtBooks, this.userId);
+        await mockstorage.saveBorrowedBooks(borrowedBooks, this.userId);
+        await mockstorage.saveTransactionHistory(transactionHistory, this.userId);
       } catch (e) {
         alert('Failed to save to server. Please try again.');
         return;
       }
 
-      // Save to localStorage as well (optional)
-      localStorage.setItem('broughtBooks', JSON.stringify(
-        (JSON.parse(localStorage.getItem('broughtBooks')) || []).concat(broughtBooks)
+      // Optionally: Save to localStorage (per user, if needed)
+      localStorage.setItem(`broughtBooks_${this.userId}`, JSON.stringify(
+        (JSON.parse(localStorage.getItem(`broughtBooks_${this.userId}`)) || []).concat(broughtBooks)
       ));
-      localStorage.setItem('borrowedBooks', JSON.stringify(
-        (JSON.parse(localStorage.getItem('borrowedBooks')) || []).concat(borrowedBooks)
+      localStorage.setItem(`borrowedBooks_${this.userId}`, JSON.stringify(
+        (JSON.parse(localStorage.getItem(`borrowedBooks_${this.userId}`)) || []).concat(borrowedBooks)
       ));
-      localStorage.setItem('transactionHistory', JSON.stringify(
-        (JSON.parse(localStorage.getItem('transactionHistory')) || []).concat(transactionHistory)
+      localStorage.setItem(`transactionHistory_${this.userId}`, JSON.stringify(
+        (JSON.parse(localStorage.getItem(`transactionHistory_${this.userId}`)) || []).concat(transactionHistory)
       ));
 
       // Clear cart
