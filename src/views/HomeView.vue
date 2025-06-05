@@ -21,7 +21,7 @@
               <input type="password" class="form-control form-control-lg" id="password" placeholder="Enter Password" v-model="password">
               <div v-if="errors.password" class="error-msg">{{ errors.password }}</div>
               
-              <button class="btn btn-primary my-4 center-btn" @click="validateLogin">Login</button>
+              <button class="btn btn-primary my-4 center-btn" @click="validateLogin" :disabled="isSubmitting">Login</button>
               <p class="text-center">
                 Don't have an account?
                 <span @click="toggleForm" style="color:blue;cursor:pointer;">Create account</span>
@@ -56,7 +56,7 @@
               <input type="password" class="form-control form-control-lg" id="confirmPassword" placeholder="Confirm Password" v-model="confirmpassword">
               <div v-if="errors.confirmPassword" class="error-msg">{{ errors.confirmPassword }}</div>
               
-              <button class="btn btn-success my-4 center-btn" @click="validateSignUp">Sign Up</button>
+              <button class="btn btn-success my-4 center-btn" @click="validateSignUp" :disabled="isSubmitting">Sign Up</button>
               <p class="text-center">
                 Already have an account?
                 <span @click="toggleForm" style="color:blue;cursor:pointer;">Login</span>
@@ -84,7 +84,8 @@ export default {
       password: '',
       confirmpassword: '',
       errors: {},
-      showPage: false
+      showPage: false,
+      isSubmitting: false
     }
   },
   mounted() {
@@ -101,6 +102,7 @@ export default {
       this.password = '';
       this.confirmpassword = '';
       this.phoneNumber = '';
+      this.isSubmitting = false;
     },
     async validateLogin() {
       this.errors = {};
@@ -117,6 +119,7 @@ export default {
       }
 
       if (Object.keys(this.errors).length === 0) {
+        this.isSubmitting = true;
         try {
           const users = await mockstorage.fetchUsers();
           const user = users.find(
@@ -134,6 +137,8 @@ export default {
           }
         } catch (err) {
           toast.error('Error connecting to server');
+        } finally {
+          this.isSubmitting = false;
         }
       }
     },
@@ -173,10 +178,11 @@ export default {
       }
       if (!this.phoneNumber) {
         this.errors.phoneNumber = "Please enter a phone number";
-      } else if (!/^\d{11}$/.test(this.phoneNumber)) {
+      } else if (!/^\d{10}$/.test(this.phoneNumber)) {
         this.errors.phoneNumber = "Phone number must be exactly 11 digits";
       }
       if (Object.keys(this.errors).length === 0) {
+        this.isSubmitting = true;
         try {
           const users = await mockstorage.fetchUsers();
           const exists = users.some(u => u.email === this.email);
@@ -197,13 +203,14 @@ export default {
           this.toggleForm();
         } catch (err) {
           toast.error('Error connecting to server');
+        } finally {
+          this.isSubmitting = false;
         }
       }
     }
   }
 }
 </script>
-
 
 <style scoped>
 .error-msg{

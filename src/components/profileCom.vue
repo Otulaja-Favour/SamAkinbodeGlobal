@@ -14,7 +14,6 @@
           <i :class="item.icon"></i>
           <span class="sidebar-label">{{ item.label }}</span>
         </div>
-        <!--  -->
       </aside>
 
       <!-- Main Content -->
@@ -89,30 +88,34 @@
         </div>
 
         <!-- My Rentals -->
+       
         <div v-else-if="dashboardTab === 'rentals'">
-          <h4>My Rentals ({{ rentedBooks.length }})</h4>
-          <div v-if="rentedBooks.length === 0" class="alert alert-info">No books rented yet.</div>
-          <div class="row" v-else>
-            <div class="col-md-4 mb-3" v-for="(book, idx) in rentedBooks" :key="book.id">
-              <div class="card h-100">
-                <img v-if="book.image" :src="book.image" class="card-img-top" style="height:180px;object-fit:cover;">
-                <div class="card-body">
-                  <h5 class="card-title">{{ book.title }}</h5>
-                  <p class="card-text">{{ book.author }}</p>
-                  <span class="badge bg-success">Rented</span>
-                  <div class="d-flex align-items-center mt-2">
-                    <button class="btn btn-outline-primary btn-sm me-2" @click="viewBook(book)">
-                      <i class="fas fa-eye"></i> Read
-                    </button>
-                    <button class="btn btn-outline-secondary btn-sm" @click="showCommentModal(book, idx, 'rented')">
-                      <i class="fas fa-comment"></i> Comment
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+  <h4>My Rentals ({{ rentedBooks.length }})</h4>
+  <div v-if="rentedBooks.length === 0" class="alert alert-info">No books rented yet.</div>
+  <div class="row" v-else>
+    <div class="col-md-4 mb-3" v-for="(book, idx) in rentedBooks" :key="book.id">
+      <div class="card h-100">
+        <img v-if="book.image" :src="book.image" class="card-img-top" style="height:180px;object-fit:cover;">
+        <div class="card-body">
+          <h5 class="card-title">{{ book.title }}</h5>
+          <p class="card-text">{{ book.author }}</p>
+             
+          <span class="badge bg-success">Rented</span> <span class="btn btn-outline-danger btn-sm" @click="returnRentedBook(idx)" >   <i class="fas fa-undo"></i> Return </span>
+          <div class="d-flex align-items-center mt-2">
+            <button class="btn btn-outline-primary btn-sm me-2" @click="viewBook(book)">
+              <i class="fas fa-eye"></i> Read
+            </button>
+            <button class="btn btn-outline-secondary btn-sm me-2" @click="showCommentModal(book, idx, 'rented')">
+              <i class="fas fa-comment"></i> Comment
+            </button>
+            
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
         <!-- Transactions -->
         <div v-else-if="dashboardTab === 'transactions'">
@@ -196,6 +199,8 @@
             <h6>Your Details:</h6>
             <p><strong>Name:</strong> {{ user.firstName }}</p>
             <p><strong>Email:</strong> {{ user.email }}</p>
+            <p><strong>Age:</strong> {{ user.Age }}</p>
+            <p><strong>Phone NO:</strong> {{ user.phoneNumber }}</p>
           </div>
         </div>
 
@@ -271,10 +276,11 @@ export default {
       if (user.id) localStorage.setItem("userId", user.id);
     }
     this.user = user;
-    this.ownedBooks = await mockstorage.fetchBroughtBooks();
-    this.rentedBooks = await mockstorage.fetchBorrowedBooks();
-    this.transactionHistory = await mockstorage.fetchTransactionHistory();
-    this.appointments = await mockstorage.fetchAppointments();
+    // Fetch only books and transactions for this user
+    this.ownedBooks = await mockstorage.fetchBroughtBooks(user.id);
+    this.rentedBooks = await mockstorage.fetchBorrowedBooks(user.id);
+    this.transactionHistory = await mockstorage.fetchTransactionHistory(user.id);
+    this.appointments = await mockstorage.fetchAppointments(user.id);
   },
   methods: {
     saveSettings() {
@@ -298,30 +304,43 @@ export default {
       this.currentBookType = "";
       this.commentText = "";
     },
- async addCommentToBook() {
-  if (!this.commentText) return;
-  if (!this.currentBook.comments) this.currentBook.comments = [];
-  this.currentBook.comments.push(this.commentText);
 
-  if (this.currentBookType === "owned") {
-    this.ownedBooks.splice(this.currentBookIdx, 1, this.currentBook);
-    await mockstorage.saveBookComment(this.currentBook.id, this.currentBook.comments);
-  } else if (this.currentBookType === "rented") {
-    this.rentedBooks.splice(this.currentBookIdx, 1, this.currentBook);
-    await mockstorage.saveBookComment(this.currentBook.id, this.currentBook.comments);
-  }
-  this.closeCommentModal();
-  toast.success("Comment added!");
-},
+
+  // ...existing code...
+  async returnRentedBook(idx) {
+    const book = this.rentedBooks[idx];
+    // Remove from local array
+    this.rentedBooks.splice(idx, 1);
+    // Remove from API (implement this in your mockstorage)
+    await mockstorage.removeBorrowedBook(book.id, this.user.id);
+    toast.success("Book returned successfully!");
+  },
+
+    async addCommentToBook() {
+      if (!this.commentText) return;
+      if (!this.currentBook.comments) this.currentBook.comments = [];
+      this.currentBook.comments.push(this.commentText);
+
+      if (this.currentBookType === "owned") {
+        this.ownedBooks.splice(this.currentBookIdx, 1, this.currentBook);
+        await mockstorage.saveBookComment(this.currentBook.id, this.currentBook.comments);
+      } else if (this.currentBookType === "rented") {
+        this.rentedBooks.splice(this.currentBookIdx, 1, this.currentBook);
+        await mockstorage.saveBookComment(this.currentBook.id, this.currentBook.comments);
+      }
+      this.closeCommentModal();
+      toast.success("Comment added!");
+    },
     async submitAppointment() {
       await mockstorage.saveAppointment({
         ...this.appointment,
+        userId: this.user.id,
         date: new Date().toLocaleString()
       });
       toast.success("Appointment created!");
       this.showAppointmentModal = false;
       this.appointment = { subject: "", details: "" };
-      this.appointments = await mockstorage.fetchAppointments();
+      this.appointments = await mockstorage.fetchAppointments(this.user.id);
     }
   }
 };
@@ -422,8 +441,8 @@ export default {
   .asideBar {
     width: 100%;
     min-width: 0;
-    display: flex; /* Make sidebar a flex container */
-    flex-direction: row; /* Row direction for horizontal layout */
+    display: flex;
+    flex-direction: row;
     justify-content: space-around;
     align-items: stretch;
     padding: 0;
