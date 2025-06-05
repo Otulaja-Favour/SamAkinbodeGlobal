@@ -24,6 +24,7 @@ export default {
 
   // Fetch a single user by ID, with localStorage fallback
   async fetchUser(id) {
+    if (!id) return null;
     try {
       const response = await Promise.race([
         axios.get(`${API_URL}/${id}`),
@@ -144,7 +145,7 @@ export default {
 
   // Save a comment to a book (by id)
   async saveBookComment(bookId, comments) {
-    // Find the book in API and update its comments array
+    if (!bookId) return;
     const users = await this.fetchUsers();
     const book = users.find(u => u.id == bookId);
     if (book) {
@@ -155,6 +156,7 @@ export default {
 
   // Return a borrowed book (delete from API)
   async returnBorrowedBook(bookId) {
+    if (!bookId) return;
     await this.deleteUser(bookId);
     // Optionally update localStorage
     let local = JSON.parse(localStorage.getItem('borrowedBooks') || '[]');

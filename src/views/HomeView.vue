@@ -1,91 +1,71 @@
 <template>
   <div class="container-fluid p-4">
     <div class="landingPage">
-
-
-
       <transition name="slide-left">
-
         <div class="imageAspect" v-if="showPage">
           <img src="../assets/images/JARIPEO.jpeg" alt="">
         </div>
       </transition>
 
       <transition name="slide-right">
-
         <div class="authentications" v-if="showPage">
           <h3 class="text-center" v-if="isLogin">Welcome back</h3>
           <h3 class="text-center" v-else>Join site name</h3>
           <div class="loginAspect">
             <template v-if="isLogin">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control form-control-lg" id="email" placeholder="Enter Email" v-model="email">
-            <div v-if="errors.email" class="error-msg">
-              {{ errors.email }}
-            </div>
-            
-            <label for="password" class="form-label">Password</label>
-            <input type="password" class="form-control form-control-lg" id="password" placeholder="Enter Password" v-model="password">
-            <div v-if="errors.password" class="error-msg">
-              {{ errors.password }}
-            </div>
-            <button class="btn btn-primary my-4 center-btn" @click="validateLogin">Login</button>
-            <p class="text-center">Don't have an account? <span @click="toggleForm" style="color:blue;cursor:pointer;">Create account</span></p>
-          </template>
-          
-          
-          <template v-else>
-            <label for="FirstName" class="form-label">First Name</label>
-            <input type="text" class="form-control form-control-lg" id="FirstName" placeholder="Enter first name" v-model="firstName">
-            <div v-if="errors.firstName" class="error-msg">
-              {{ errors.firstName }}
-            </div>
-            
-            <label for="lastName" class="form-label">Last Name</label>
-            <input type="text" class="form-control form-control-lg" id="lastName" placeholder="Enter last name" v-model="lastName">
-            <div v-if="errors.lastName" class="error-msg">
-              {{ errors.lastName }}
-            </div>
-            
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control form-control-lg" id="email" placeholder="Enter Email" v-model="email">
-            <div v-if="errors.email" class="error-msg">
-              {{ errors.email }}
-            </div>
-            
-            <label for="age" class="form-label">Age</label>
-            <input type="number" class="form-control form-control-lg" id="age" placeholder="Enter age" v-model="age">
-            <div v-if="errors.age" class="error-msg">
-              {{ errors.age }}
-            </div>
-            
-            <label for="phoneNumber" class="form-label">Phone Number</label>
-            <input type="number" class="form-control form-control-lg" id="phoneNumber" placeholder="Enter phone number" v-model="phoneNumber">
-            <div v-if="errors.phoneNumber" class="error-msg">
-              {{ errors.phoneNumber }}
-            </div>
-            
-            <label for="password" class="form-label">Password</label>
-            <input type="password" class="form-control form-control-lg" id="password" placeholder="Enter Password" v-model="password">
-            <div v-if="errors.password" class="error-msg">
-              {{ errors.password }}
-            </div>
-            
-            <label for="confirmPassword" class="form-label">Confirm Password</label>
-            <input type="password" class="form-control form-control-lg" id="confirmPassword" placeholder="Confirm Password" v-model="confirmpassword">
-            <div v-if="errors.confirmPassword" class="error-msg">
-              {{ errors.confirmPassword }}
-            </div>
-            
-            <button class="btn btn-success my-4 center-btn" @click="validateSignUp">Sign Up</button>
-            <p class="text-center">Already have an account? <span @click="toggleForm" style="color:blue;cursor:pointer;">Login</span></p>
-          </template>
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control form-control-lg" id="email" placeholder="Enter Email" v-model="email">
+              <div v-if="errors.email" class="error-msg">{{ errors.email }}</div>
+              
+              <label for="password" class="form-label">Password</label>
+              <input type="password" class="form-control form-control-lg" id="password" placeholder="Enter Password" v-model="password">
+              <div v-if="errors.password" class="error-msg">{{ errors.password }}</div>
+              
+              <button class="btn btn-primary my-4 center-btn" @click="validateLogin">Login</button>
+              <p class="text-center">
+                Don't have an account?
+                <span @click="toggleForm" style="color:blue;cursor:pointer;">Create account</span>
+              </p>
+            </template>
+            <template v-else>
+              <label for="FirstName" class="form-label">First Name</label>
+              <input type="text" class="form-control form-control-lg" id="FirstName" placeholder="Enter first name" v-model="firstName">
+              <div v-if="errors.firstName" class="error-msg">{{ errors.firstName }}</div>
+              
+              <label for="lastName" class="form-label">Last Name</label>
+              <input type="text" class="form-control form-control-lg" id="lastName" placeholder="Enter last name" v-model="lastName">
+              <div v-if="errors.lastName" class="error-msg">{{ errors.lastName }}</div>
+              
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control form-control-lg" id="email" placeholder="Enter Email" v-model="email">
+              <div v-if="errors.email" class="error-msg">{{ errors.email }}</div>
+              
+              <label for="age" class="form-label">Age</label>
+              <input type="number" class="form-control form-control-lg" id="age" placeholder="Enter age" v-model="age">
+              <div v-if="errors.age" class="error-msg">{{ errors.age }}</div>
+              
+              <label for="phoneNumber" class="form-label">Phone Number</label>
+              <input type="number" class="form-control form-control-lg" id="phoneNumber" placeholder="Enter phone number" v-model="phoneNumber">
+              <div v-if="errors.phoneNumber" class="error-msg">{{ errors.phoneNumber }}</div>
+              
+              <label for="password" class="form-label">Password</label>
+              <input type="password" class="form-control form-control-lg" id="password" placeholder="Enter Password" v-model="password">
+              <div v-if="errors.password" class="error-msg">{{ errors.password }}</div>
+              
+              <label for="confirmPassword" class="form-label">Confirm Password</label>
+              <input type="password" class="form-control form-control-lg" id="confirmPassword" placeholder="Confirm Password" v-model="confirmpassword">
+              <div v-if="errors.confirmPassword" class="error-msg">{{ errors.confirmPassword }}</div>
+              
+              <button class="btn btn-success my-4 center-btn" @click="validateSignUp">Sign Up</button>
+              <p class="text-center">
+                Already have an account?
+                <span @click="toggleForm" style="color:blue;cursor:pointer;">Login</span>
+              </p>
+            </template>
+          </div>
         </div>
-        
-      </div>
-    </transition>
+      </transition>
     </div>
-    
   </div>
 </template>
 <script>
@@ -107,12 +87,9 @@ export default {
       showPage: false
     }
   },
-
-mounted() {
+  mounted() {
     this.showPage = true;
   },
-
-
   methods: {
     toggleForm() {
       this.isLogin = !this.isLogin;
@@ -123,7 +100,7 @@ mounted() {
       this.age = '';
       this.password = '';
       this.confirmpassword = '';
-      this.phoneNumber= ''
+      this.phoneNumber = '';
     },
     async validateLogin() {
       this.errors = {};
@@ -139,7 +116,6 @@ mounted() {
         this.errors.password = "Password must be more than 5 characters";
       }
 
-      // If no errors, check user in API
       if (Object.keys(this.errors).length === 0) {
         try {
           const users = await mockstorage.fetchUsers();
@@ -147,8 +123,12 @@ mounted() {
             u => u.email === this.email && u.password === this.password
           );
           if (user) {
+            // Save userId for later use
+            localStorage.setItem('userId', user.id);
             toast.success('Login successful!');
-            
+            setTimeout(() => {
+              this.$router.push('/dashboard');
+            }, 1500);
           } else {
             toast.error('Invalid email or password');
           }
@@ -191,32 +171,30 @@ mounted() {
       } else if (this.confirmpassword !== this.password) {
         this.errors.confirmPassword = "Passwords do not match";
       }
-     if (!this.phoneNumber) {
-  this.errors.phoneNumber = "Please enter a phone number";
-} else if (!/^\d{10}$/.test(this.phoneNumber)) {
-  this.errors.phoneNumber = "Phone number must be exactly 11 digits";
-}
-      // If no errors, push data to API
+      if (!this.phoneNumber) {
+        this.errors.phoneNumber = "Please enter a phone number";
+      } else if (!/^\d{11}$/.test(this.phoneNumber)) {
+        this.errors.phoneNumber = "Phone number must be exactly 11 digits";
+      }
       if (Object.keys(this.errors).length === 0) {
         try {
-          // Check if email already exists
           const users = await mockstorage.fetchUsers();
           const exists = users.some(u => u.email === this.email);
           if (exists) {
             toast.error('Email already exists!');
-  return;
+            return;
           }
           await mockstorage.createUser({
             firstName: this.firstName,
             lastName: this.lastName,
             email: this.email,
-            Age: this.age,
+            age: this.age,
             phoneNumber: this.phoneNumber,
             password: this.password,
             role: 'user'
           });
-         toast.success('Sign up successful!');
-this.toggleForm();
+          toast.success('Sign up successful!');
+          this.toggleForm();
         } catch (err) {
           toast.error('Error connecting to server');
         }
@@ -225,6 +203,8 @@ this.toggleForm();
   }
 }
 </script>
+
+
 <style scoped>
 .error-msg{
   color: red;
@@ -245,34 +225,30 @@ label{
   margin-top: 10px;
   width: 50%;
   height: 600px;
-overflow: hidden;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1px solid green;
-  border-radius: 30px
-
+  border-radius: 30px;
 }
 .imageAspect img{
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  border-radius: 30px
+  border-radius: 30px;
 }
 .authentications{
   padding: 40px;
   width: 40%;
-  
-   max-height: 600px;      
+  max-height: 600px;      
   overflow-y: auto; 
 }
 .center-btn{
   width: 100% !important;
-padding: 10px 0px;
+  padding: 10px 0px;
 }
-
-
 .slide-left-enter-active {
   animation: slideInLeft 0.8s cubic-bezier(0.23, 1, 0.32, 1);
 }
@@ -286,7 +262,6 @@ padding: 10px 0px;
     transform: translateX(0);
   }
 }
-
 .slide-right-enter-active {
   animation: slideInRight 0.8s cubic-bezier(0.23, 1, 0.32, 1);
 }
@@ -300,8 +275,7 @@ padding: 10px 0px;
     transform: translateX(0);
   }
 }
-
-  @media screen and (max-width: 700px) {
+@media screen and (max-width: 700px) {
   .landingPage {
     position: relative;
     flex-direction: column;
@@ -312,13 +286,12 @@ padding: 10px 0px;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    /* Add a dark overlay using a pseudo-element */
   }
   .landingPage::before {
     content: "";
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,0.4); /* Adjust opacity here */
+    background: rgba(0,0,0,0.4);
     z-index: 0;
     pointer-events: none;
   }
@@ -335,5 +308,4 @@ padding: 10px 0px;
     display: none;
   }
 }
-
 </style>
