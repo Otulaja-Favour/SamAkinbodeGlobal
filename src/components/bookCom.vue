@@ -4,53 +4,64 @@
     <nav-bar :cart-count="cartCount" />
 
     <h3 class="m-3">All Available Books</h3>
-    <div class="row">
-      <div
-        class="col-md-4 mb-4"
-        v-for="book in paginatedBooks"
-        :key="book.id"
-      >
-        <div class="card h-100">
-          <img
-            v-if="book.image"
-            :src="book.image"
-            class="card-img-top"
-            alt="Book cover"
-            style="height: 250px; object-fit: cover;"
-          />
-          <div class="card-body">
-            <h5 class="card-title">{{ book.title }}</h5>
-            <p class="card-text">{{ book.author }}</p>
-            <p class="card-text">{{ book.description }}</p>
-            <p style="display: flex; justify-content: space-between; align-items: center;" class="card-text fw-bold">
-              Buy: ₦{{ book.price }}
-              <span class="card-text fw-bold">Rent: ₦{{ book.rent }}</span>
-            </p>
-            <button class="btn btn-primary btn-sm mt-2" @click="openModal(book)">View</button>
-          </div>
-        </div>
+
+    <!-- Spinner Loader -->
+    <div v-if="loading" class="spinner-container">
+      <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+        <span class="visually-hidden">Loading...</span>
       </div>
     </div>
 
-    <!-- Pagination Controls -->
-    <nav v-if="totalPages > 1" class="d-flex justify-content-center my-4 py-4">
-      <ul class="pagination">
-        <li class="page-item" :class="{ disabled: currentPage === 1 }">
-          <button class="page-link" @click="goToPage(currentPage - 1)">Previous</button>
-        </li>
-        <li
-          class="page-item"
-          v-for="page in totalPages"
-          :key="page"
-          :class="{ active: currentPage === page }"
+    <!-- Book List -->
+    <div v-else>
+      <div class="row">
+        <div
+          class="col-md-4 mb-4"
+          v-for="book in paginatedBooks"
+          :key="book.id"
         >
-          <button class="page-link" @click="goToPage(page)">{{ page }}</button>
-        </li>
-        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-          <button class="page-link" @click="goToPage(currentPage + 1)">Next</button>
-        </li>
-      </ul>
-    </nav>
+          <div class="card h-100">
+            <img
+              v-if="book.image"
+              :src="book.image"
+              class="card-img-top"
+              alt="Book cover"
+              style="height: 250px; object-fit: cover;"
+            />
+            <div class="card-body">
+              <h5 class="card-title">{{ book.title }}</h5>
+              <p class="card-text">{{ book.author }}</p>
+              <p class="card-text">{{ book.description }}</p>
+              <p style="display: flex; justify-content: space-between; align-items: center;" class="card-text fw-bold">
+                Buy: ₦{{ book.price }}
+                <span class="card-text fw-bold">Rent: ₦{{ book.rent }}</span>
+              </p>
+              <button class="btn btn-primary btn-sm mt-2" @click="openModal(book)">View</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination Controls -->
+      <nav v-if="totalPages > 1" class="d-flex justify-content-center my-4 py-4">
+        <ul class="pagination">
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <button class="page-link" @click="goToPage(currentPage - 1)">Previous</button>
+          </li>
+          <li
+            class="page-item"
+            v-for="page in totalPages"
+            :key="page"
+            :class="{ active: currentPage === page }"
+          >
+            <button class="page-link" @click="goToPage(page)">{{ page }}</button>
+          </li>
+          <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+            <button class="page-link" @click="goToPage(currentPage + 1)">Next</button>
+          </li>
+        </ul>
+      </nav>
+    </div>
 
     <!-- Book Modal -->
     <div
@@ -130,6 +141,7 @@ export default {
       selectedBook: {},
       cart: JSON.parse(localStorage.getItem('cart')) || [],
       cartCount: JSON.parse(localStorage.getItem('cart'))?.length || 0,
+      loading: true
     }
   },
   computed: {
@@ -142,7 +154,9 @@ export default {
     },
   },
   async mounted() {
+    this.loading = true;
     this.books = await booksstore.fetchBooks();
+    this.loading = false;
     this.updateCartIcon();
     window.addEventListener('cart-updated', this.handleCartUpdate);
   },
@@ -206,7 +220,6 @@ export default {
       const toast = document.createElement('div');
       toast.textContent = message;
       toast.style.position = 'fixed';
-      // toast.style.bottom = '30px';
       toast.style.top = '10px'
       toast.style.right = '30px';
       toast.style.background = '#28a745';
@@ -225,6 +238,12 @@ export default {
 </script>
 
 <style scoped>
+.spinner-container {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .modal {
   background: rgba(0,0,0,0.3);
   position: fixed;

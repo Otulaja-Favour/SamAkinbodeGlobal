@@ -1,6 +1,6 @@
 <template>
   <div class="container-fluid p-0">
- <navBar />
+    <navBar />
 
     <div class="hero container-fluid text-center my-4 py-4">
       <h4>Welcome to BookVault</h4>
@@ -14,7 +14,15 @@
     </div>
 
     <h3 class="m-3">Popular Books</h3>
-    <div class="row">
+
+    <!-- Spinner Loader -->
+    <div v-if="loading" class="spinner-container">
+      <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
+    <div class="row" v-else>
       <div
         class="col-md-4 mb-4"
         v-for="book in randomBooks"
@@ -54,6 +62,7 @@ export default {
     return {
       books: [],
       search: "",
+      loading: true
     }
   },
   computed: {
@@ -68,7 +77,7 @@ export default {
       );
     },
     randomBooks() {
-      // Shuffle and pick 4 books from filteredBooks
+      // Shuffle and pick 6 books from filteredBooks
       let arr = [...this.filteredBooks];
       for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -78,14 +87,21 @@ export default {
     }
   },
   async mounted() {
+    this.loading = true;
     this.books = await booksstore.fetchBooks();
+    this.loading = false;
   }
 };
 </script>
 
 <style scoped>
-
 .hero{
   background-color: whitesmoke;
+}
+.spinner-container {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

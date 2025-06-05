@@ -104,44 +104,58 @@ export default {
       this.phoneNumber = '';
       this.isSubmitting = false;
     },
-    async validateLogin() {
-      this.errors = {};
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!this.email) {
-        this.errors.email = "Email is required";
-      } else if (!emailRegex.test(this.email)) {
-        this.errors.email = "Enter a valid email address";
-      }
-      if (!this.password) {
-        this.errors.password = "Password is required";
-      } else if (this.password.length <= 5) {
-        this.errors.password = "Password must be more than 5 characters";
-      }
 
-      if (Object.keys(this.errors).length === 0) {
-        this.isSubmitting = true;
-        try {
-          const users = await mockstorage.fetchUsers();
-          const user = users.find(
-            u => u.email === this.email && u.password === this.password
-          );
-          if (user) {
-            // Save userId for later use
-            localStorage.setItem('userId', user.id);
-            toast.success('Login successful!');
-            setTimeout(() => {
-              this.$router.push('/dashboard');
-            }, 1500);
-          } else {
-            toast.error('Invalid email or password');
-          }
-        } catch (err) {
-          toast.error('Error connecting to server');
-        } finally {
-          this.isSubmitting = false;
-        }
+    // In your HomeView.vue methods section
+async validateLogin() {
+  this.errors = {};
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!this.email) {
+    this.errors.email = "Email is required";
+  } else if (!emailRegex.test(this.email)) {
+    this.errors.email = "Enter a valid email address";
+  }
+  if (!this.password) {
+    this.errors.password = "Password is required";
+  } else if (this.password.length <= 5) {
+    this.errors.password = "Password must be more than 5 characters";
+  }
+
+  if (Object.keys(this.errors).length === 0) {
+    this.isSubmitting = true;
+    try {
+      // Admin check
+      if (
+        this.email === "otulajafavour@gmail.com" &&
+        this.password === "1234567890"
+      ) {
+        toast.success('Admin login successful!');
+        setTimeout(() => {
+          this.$router.push('/admin');
+        }, 1000);
+        return;
       }
-    },
+      // Normal user login
+      const users = await mockstorage.fetchUsers();
+      const user = users.find(
+        u => u.email === this.email && u.password === this.password
+      );
+      if (user) {
+        localStorage.setItem('userId', user.id);
+        toast.success('Login successful!');
+        setTimeout(() => {
+          this.$router.push('/dashboard');
+        }, 1500);
+      } else {
+        toast.error('Invalid email or password');
+      }
+    } catch (err) {
+      toast.error('Error connecting to server');
+    } finally {
+      this.isSubmitting = false;
+    }
+  }
+},
+    
     async validateSignUp() {
       this.errors = {};
       const textRegex = /^[A-Za-z\s]+$/;
