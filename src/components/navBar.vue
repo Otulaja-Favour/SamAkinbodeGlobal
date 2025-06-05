@@ -16,7 +16,7 @@
             </span>
           </RouterLink>
           <RouterLink class="nav-link" to="/profile"><i class="fas fa-user"></i> Profile</RouterLink>
-          <RouterLink class="nav-link" to="/logout"><i class="fas fa-sign-out-alt"></i> Logout</RouterLink>
+          <RouterLink class="nav-link" to="/"><i class="fas fa-sign-out-alt"></i> Logout</RouterLink>
         </div>
       </div>
     </nav>
@@ -34,7 +34,7 @@
           <span>Cart</span>
         </RouterLink>
         <RouterLink class="nav-link" to="/profile"><i class="fas fa-user"></i><span>Profile</span></RouterLink>
-        <RouterLink class="nav-link" to="/logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></RouterLink>
+        <RouterLink class="nav-link" to="/"><i class="fas fa-sign-out-alt"></i><span>Logout</span></RouterLink>
       </div>
     </nav>
   </div>

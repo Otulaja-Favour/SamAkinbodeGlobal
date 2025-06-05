@@ -7,21 +7,17 @@ export default {
   // Fetch all users, with localStorage fallback if API fails or times out after 5s
   async fetchUsers() {
     try {
-      // Try to fetch from API, but timeout after 5 seconds
       const response = await Promise.race([
         axios.get(API_URL),
         new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
       ]);
-      // If successful, save to localStorage for offline use
       localStorage.setItem(LOCAL_KEY, JSON.stringify(response.data));
       return response.data;
     } catch (err) {
-      // If API fails or times out, try to get from localStorage
       const local = localStorage.getItem(LOCAL_KEY);
       if (local) {
         return JSON.parse(local);
       }
-      // If nothing in localStorage, return empty array
       return [];
     }
   },
@@ -47,7 +43,6 @@ export default {
   // Create a new user and update localStorage
   async createUser(userData) {
     const response = await axios.post(API_URL, userData);
-    // Update localStorage with new user
     let users = [];
     try {
       users = await this.fetchUsers();
@@ -81,18 +76,116 @@ export default {
     return response.data;
   },
 
- async saveBroughtBooks(books) {
-    // send books to your API endpoint or mock endpoint
-
-    const response = await axios.post(API_URL, userData);
-// coming back ere fo rclarity
+  // Save brought books (buy)
+  async saveBroughtBooks(books) {
+    if (!Array.isArray(books) || books.length === 0) return;
+    for (const book of books) {
+      const userData = { ...book, type: 'broughtBook' };
+      await axios.post(API_URL, userData);
+    }
+    let local = JSON.parse(localStorage.getItem('broughtBooks') || '[]');
+    local = local.concat(books);
+    localStorage.setItem('broughtBooks', JSON.stringify(local));
   },
+
+  // Save borrowed books (rent)
   async saveBorrowedBooks(books) {
-    // send books to your API endpoint or mock endpoint
+    if (!Array.isArray(books) || books.length === 0) return;
+    for (const book of books) {
+      const userData = { ...book, type: 'borrowedBook' };
+      await axios.post(API_URL, userData);
+    }
+    let local = JSON.parse(localStorage.getItem('borrowedBooks') || '[]');
+    local = local.concat(books);
+    localStorage.setItem('borrowedBooks', JSON.stringify(local));
   },
+
+  // Save transaction history
   async saveTransactionHistory(transactions) {
-    // send transactions to your API endpoint or mock endpoint
+    if (!Array.isArray(transactions) || transactions.length === 0) return;
+    for (const tx of transactions) {
+      const txData = { ...tx, type: 'transaction' };
+      await axios.post(API_URL, txData);
+    }
+    let local = JSON.parse(localStorage.getItem('transactionHistory') || '[]');
+    local = local.concat(transactions);
+    localStorage.setItem('transactionHistory', JSON.stringify(local));
+  },
+
+  // Fetch brought books (buy)
+  async fetchBroughtBooks() {
+    try {
+      const users = await this.fetchUsers();
+      return users.filter(u => u.type === 'broughtBook');
+    } catch {
+      return JSON.parse(localStorage.getItem('broughtBooks') || '[]');
+    }
+  },
+
+  // Fetch borrowed books (rent)
+  async fetchBorrowedBooks() {
+    try {
+      const users = await this.fetchUsers();
+      return users.filter(u => u.type === 'borrowedBook');
+    } catch {
+      return JSON.parse(localStorage.getItem('borrowedBooks') || '[]');
+    }
+  },
+
+  // Fetch transaction history
+  async fetchTransactionHistory() {
+    try {
+      const users = await this.fetchUsers();
+      return users.filter(u => u.type === 'transaction');
+    } catch {
+      return JSON.parse(localStorage.getItem('transactionHistory') || '[]');
+    }
+  },
+
+  // Save a comment to a book (by id)
+  async saveBookComment(bookId, comments) {
+    // Find the book in API and update its comments array
+    const users = await this.fetchUsers();
+    const book = users.find(u => u.id == bookId);
+    if (book) {
+      book.comments = comments;
+      await this.updateUser(bookId, book);
+    }
+  },
+
+  // Return a borrowed book (delete from API)
+  async returnBorrowedBook(bookId) {
+    await this.deleteUser(bookId);
+    // Optionally update localStorage
+    let local = JSON.parse(localStorage.getItem('borrowedBooks') || '[]');
+    local = local.filter(b => b.id != bookId);
+    localStorage.setItem('borrowedBooks', JSON.stringify(local));
+  },
+
+  // Appointments
+  async fetchAppointments() {
+    try {
+      const users = await this.fetchUsers();
+      return users.filter(u => u.type === 'appointment');
+    } catch {
+      return JSON.parse(localStorage.getItem('appointments') || '[]');
+    }
+  },
+  async saveAppointment(appointment) {
+    const data = { ...appointment, type: 'appointment' };
+    await axios.post(API_URL, data);
+    let local = JSON.parse(localStorage.getItem('appointments') || '[]');
+    local.push(data);
+    localStorage.setItem('appointments', JSON.stringify(local));
+  },
+
+  // Save user details
+  async saveUser(user) {
+    if (!user.id) {
+      // If no id, create new
+      return await this.createUser(user);
+    } else {
+      return await this.updateUser(user.id, user);
+    }
   }
-
-
 };

@@ -6,7 +6,7 @@
         Your cart is empty.
         <router-link to="/books"><button class="btn btn-primary">Browse books</button></router-link>
       </div>
-      <div v-else>
+      <div class="table-responsive" v-else>
         <table class="table table-bordered align-middle">
           <thead class="table-light">
             <tr>
@@ -45,6 +45,7 @@
     </div>
   </div>
 </template>
+
 <script>
 import mockstorage from '@/stores/mockstorage'; // Adjust path as needed
 
@@ -74,7 +75,7 @@ export default {
       localStorage.setItem('cart', JSON.stringify(this.cart));
       window.dispatchEvent(new CustomEvent('cart-updated', { detail: this.cart.length }));
     },
-    async checkout() {
+    checkout() {
       const email = this.cart[0]?.email || "test@example.com";
       const amount = this.totalPrice * 100;
 
@@ -89,61 +90,69 @@ export default {
         amount: amount,
         currency: "NGN",
         ref: '' + Math.floor(Math.random() * 1000000000 + 1),
-        callback: async (response) => {
-          // Prepare arrays
-          const now = new Date().toLocaleString();
-          let broughtBooks = [];
-          let borrowedBooks = [];
-          let transactionHistory = [];
-
-          this.cart.forEach(item => {
-            if (item.action === 'buy') {
-              broughtBooks.push(item);
-              transactionHistory.push({
-                ...item,
-                type: 'buy',
-                date: now,
-                reference: response.reference
-              });
-            } else if (item.action === 'borrow') {
-              borrowedBooks.push(item);
-              transactionHistory.push({
-                ...item,
-                type: 'borrow',
-                date: now,
-                reference: response.reference
-              });
-            }
-          });
-
-          // Save to mockstorage API
-          await mockstorage.saveBroughtBooks(broughtBooks);
-          await mockstorage.saveBorrowedBooks(borrowedBooks);
-          await mockstorage.saveTransactionHistory(transactionHistory);
-
-          // Save to localStorage as well (optional)
-          localStorage.setItem('broughtBooks', JSON.stringify(
-            (JSON.parse(localStorage.getItem('broughtBooks')) || []).concat(broughtBooks)
-          ));
-          localStorage.setItem('borrowedBooks', JSON.stringify(
-            (JSON.parse(localStorage.getItem('borrowedBooks')) || []).concat(borrowedBooks)
-          ));
-          localStorage.setItem('transactionHistory', JSON.stringify(
-            (JSON.parse(localStorage.getItem('transactionHistory')) || []).concat(transactionHistory)
-          ));
-
-          // Clear cart
-          localStorage.removeItem('cart');
-          this.cart = [];
-          window.dispatchEvent(new CustomEvent('cart-updated', { detail: 0 }));
-
-          alert('Payment complete! Reference: ' + response.reference);
+        callback: (response) => {
+          this.handlePaymentSuccess(response);
         },
         onClose: () => {
           alert('Payment window closed.');
         }
       });
       handler.openIframe();
+    },
+    async handlePaymentSuccess(response) {
+      // Prepare arrays
+      const now = new Date().toLocaleString();
+      let broughtBooks = [];
+      let borrowedBooks = [];
+      let transactionHistory = [];
+
+      this.cart.forEach(item => {
+        if (item.action === 'buy') {
+          broughtBooks.push(item);
+          transactionHistory.push({
+            ...item,
+            type: 'buy',
+            date: now,
+            reference: response.reference
+          });
+        } else if (item.action === 'borrow') {
+          borrowedBooks.push(item);
+          transactionHistory.push({
+            ...item,
+            type: 'borrow',
+            date: now,
+            reference: response.reference
+          });
+        }
+      });
+
+      // Save to mockstorage API
+      try {
+        await mockstorage.saveBroughtBooks(broughtBooks);
+        await mockstorage.saveBorrowedBooks(borrowedBooks);
+        await mockstorage.saveTransactionHistory(transactionHistory);
+      } catch (e) {
+        alert('Failed to save to server. Please try again.');
+        return;
+      }
+
+      // Save to localStorage as well (optional)
+      localStorage.setItem('broughtBooks', JSON.stringify(
+        (JSON.parse(localStorage.getItem('broughtBooks')) || []).concat(broughtBooks)
+      ));
+      localStorage.setItem('borrowedBooks', JSON.stringify(
+        (JSON.parse(localStorage.getItem('borrowedBooks')) || []).concat(borrowedBooks)
+      ));
+      localStorage.setItem('transactionHistory', JSON.stringify(
+        (JSON.parse(localStorage.getItem('transactionHistory')) || []).concat(transactionHistory)
+      ));
+
+      // Clear cart
+      localStorage.removeItem('cart');
+      this.cart = [];
+      window.dispatchEvent(new CustomEvent('cart-updated', { detail: 0 }));
+
+      alert('Payment complete! Reference: ' + response.reference);
     }
   }
 };

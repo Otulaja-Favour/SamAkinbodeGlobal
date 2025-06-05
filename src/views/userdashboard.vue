@@ -13,6 +13,7 @@
       />
     </div>
 
+    <h3 class="m-3">Popular Books</h3>
     <div class="row">
       <div
         class="col-md-4 mb-4"
@@ -45,7 +46,6 @@
 </template>
 
 <script>
-import NavBar from '@/components/navBar.vue';
 import navBar from '@/components/navBar.vue';
 import booksstore from '@/stores/booksstore';
 export default {
