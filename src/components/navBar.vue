@@ -22,7 +22,7 @@
     </nav>
 
     <!-- Mobile Navbar fixed at the bottom -->
-    <nav class="navbar navbar-mobile d-flex d-lg-none">
+    <nav class="navbar navbar-mobile d-flex d-lg-none ">
       <div class="navbar-nav d-flex flex-row w-100 justify-content-around">
         <RouterLink class="nav-link" to="/dashboard"><i class="fas fa-home"></i><span>Home</span></RouterLink>
         <RouterLink class="nav-link" to="/books"><i class="fas fa-book"></i><span>Books</span></RouterLink>

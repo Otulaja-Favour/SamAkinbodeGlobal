@@ -1,14 +1,13 @@
 <template>
     <div>
-<navBar />
+<profileCom />
     </div>
 </template>
 
 <script>
-import navBar from '@/components/navBar.vue';
+import profileCom from '@/components/profileCom.vue';
     export default {
-        components: {navBar}
-        
+        components: {profileCom}
     }
 </script>
 

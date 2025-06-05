@@ -205,7 +205,8 @@ export default {
       const toast = document.createElement('div');
       toast.textContent = message;
       toast.style.position = 'fixed';
-      toast.style.bottom = '30px';
+      // toast.style.bottom = '30px';
+      toast.style.top = '10px'
       toast.style.right = '30px';
       toast.style.background = '#28a745';
       toast.style.color = '#fff';
@@ -216,7 +217,7 @@ export default {
       document.body.appendChild(toast);
       setTimeout(() => {
         document.body.removeChild(toast);
-      }, 3000);
+      }, 2000);
     }
   }
 };

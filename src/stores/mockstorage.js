@@ -79,5 +79,20 @@ export default {
     users = users.filter(u => u.id != id);
     localStorage.setItem(LOCAL_KEY, JSON.stringify(users));
     return response.data;
+  },
+
+ async saveBroughtBooks(books) {
+    // send books to your API endpoint or mock endpoint
+
+    const response = await axios.post(API_URL, userData);
+// coming back ere fo rclarity
+  },
+  async saveBorrowedBooks(books) {
+    // send books to your API endpoint or mock endpoint
+  },
+  async saveTransactionHistory(transactions) {
+    // send transactions to your API endpoint or mock endpoint
   }
+
+
 };
