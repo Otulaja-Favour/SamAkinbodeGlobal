@@ -1,3 +1,5 @@
+
+
 <template>
   <div>
     <!-- Responsive Navbar -->
@@ -80,17 +82,20 @@
                     <textarea v-model="bookForm.description" class="form-control" :maxlength="2500" rows="5" placeholder="Description (max 400 words)" required></textarea>
                     <div class="small text-muted">{{ wordCount(bookForm.description) }}/400 words</div>
                   </div>
-                  <!-- Book Modal (replace the cover image input section) -->
-<div class="mb-2">
-  <label class="form-label">Cover Image</label>
-  <input type="file" class="form-control" accept="image/*" @change="handleImageUpload">
-  <div v-if="bookForm.image" class="mt-2">
-    <img :src="bookForm.image" alt="Preview" style="max-width: 120px; max-height: 120px; object-fit:cover;">
-    <div class="small text-muted">Cover Preview</div>
-  </div>
-</div>
+                  <div class="mb-2">
+                    <label class="form-label">Cover Image</label>
+                    <input type="file" class="form-control" accept="image/*" @change="handleImageUpload">
+                    <div v-if="bookForm.image" class="mt-2">
+                      <img :src="bookForm.image" alt="Preview" style="max-width: 120px; max-height: 120px; object-fit:cover;">
+                      <div class="small text-muted">Cover Preview</div>
+                    </div>
+                  </div>
                   <div class="mb-2">
                     <input v-model="bookForm.pdfUrl" type="url" class="form-control" placeholder="Book File URL (PDF, Google Drive, etc)" required>
+                    <div v-if="bookForm.pdfUrl" class="mt-2">
+                      <iframe :src="bookForm.pdfUrl" style="width:100%;height:200px;" frameborder="0"></iframe>
+                      <div class="small text-muted">PDF Preview</div>
+                    </div>
                   </div>
                   <div class="d-flex justify-content-end">
                     <button class="btn btn-secondary me-2" type="button" @click="closeBookModal" :disabled="bookFormLoading">Cancel</button>
@@ -142,6 +147,9 @@
             </table>
           </div>
         </div>
+
+        
+        
 
         <!-- Users -->
         <div v-else-if="adminTab === 'users'">
@@ -306,6 +314,8 @@
             </form>
           </div>
         </div>
+
+
       </section>
     </div>
   </div>
@@ -455,7 +465,6 @@ export default {
       this.users = await mockstorage.fetchUsers();
       this.appointments = await mockstorage.fetchAllAppointments();
       this.transactions = await mockstorage.fetchAllTransactions();
-      // Fetch all comments (adapt to your API)
       this.comments = await mockstorage.fetchAllComments ? await mockstorage.fetchAllComments() : [];
     },
     changeTab(tab) {
@@ -464,7 +473,7 @@ export default {
       setTimeout(() => {
         this.adminTab = tab;
         this.loadingTab = "";
-      }, 400); // Simulate loading
+      }, 400);
     },
     openBookModal(mode, book = null) {
       this.modalMode = mode;
@@ -480,6 +489,23 @@ export default {
       this.resetBookForm();
       this.bookFormLoading = false;
     },
+    async handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        this.showToast("Only image files are allowed.", true);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        this.bookForm.image = evt.target.result;
+        this.showToast("Image uploaded successfully!", false);
+      };
+      reader.onerror = () => {
+        this.showToast("Failed to read image file.", true);
+      };
+      reader.readAsDataURL(file);
+    },
     async addOrUpdateBook() {
       this.bookFormLoading = true;
       try {
@@ -493,6 +519,11 @@ export default {
         }
         if (!this.bookForm.pdfUrl.startsWith("http")) {
           this.showToast("Please provide a valid file URL.", true);
+          this.bookFormLoading = false;
+          return;
+        }
+        if (!this.bookForm.image) {
+          this.showToast("Please upload a cover image.", true);
           this.bookFormLoading = false;
           return;
         }
@@ -511,7 +542,6 @@ export default {
         this.bookFormLoading = false;
       }
     },
-    
     editBook(book) {
       this.openBookModal("edit", book);
     },
