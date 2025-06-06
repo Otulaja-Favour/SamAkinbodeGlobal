@@ -87,7 +87,80 @@
           </div>
           <div class="modal-body">
             <button class="btn btn-outline-primary w-100 mb-2" @click="selectPaymentMethod('card')">Pay with Card</button>
-            <button class="btn btn-outline-success w-100" @click="selectPaymentMethod('bank')">Pay with Bank Transfer</button>
+            <button class="btn btn-outline-success w-100 mb-2" @click="selectPaymentMethod('bank')">Pay with Bank Transfer</button>
+            <button class="btn btn-outline-info w-100" @click="selectPaymentMethod('wallet')">Pay with Wallet</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Details Modal -->
+    <div v-if="showPaymentDetailsModal" class="modal-backdrop show" style="z-index: 2000;"></div>
+    <div v-if="showPaymentDetailsModal" class="modal d-block" tabindex="-1" style="z-index: 2050; background: rgba(0,0,0,0.2);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Enter Payment Details</h5>
+            <button type="button" class="btn-close" @click="closePaymentDetailsModal"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="submitPaymentDetails">
+              <div class="mb-2">
+                <label class="form-label">Name</label>
+                <input v-model="paymentForm.name" type="text" class="form-control" required />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Email</label>
+                <input v-model="paymentForm.email" type="email" class="form-control" required />
+              </div>
+              <div v-if="selectedPaymentMethod === 'card'">
+                <div class="mb-2">
+                  <label class="form-label">Card Number</label>
+                  <input v-model="paymentForm.cardNumber" type="text" class="form-control" maxlength="19" required />
+                </div>
+                <div class="mb-2 d-flex">
+                  <div class="me-2 flex-fill">
+                    <label class="form-label">Expiry</label>
+                    <input v-model="paymentForm.expiry" type="text" class="form-control" placeholder="MM/YY" required />
+                  </div>
+                  <div class="flex-fill">
+                    <label class="form-label">CVV</label>
+                    <input v-model="paymentForm.cvv" type="text" class="form-control" maxlength="4" required />
+                  </div>
+                </div>
+              </div>
+              <div v-if="selectedPaymentMethod === 'bank'">
+                <div class="mb-2">
+                  <label class="form-label">Select Bank</label>
+                  <select v-model="paymentForm.selectedBank" class="form-select" required>
+                    <option v-for="bank in banks" :key="bank.code" :value="bank.code">{{ bank.name }}</option>
+                  </select>
+                </div>
+                <div class="mb-2">
+                  <label class="form-label">Account Number</label>
+                  <input v-model="paymentForm.accountNumber" type="text" class="form-control" maxlength="10" required />
+                </div>
+              </div>
+              <div v-if="selectedPaymentMethod === 'wallet'">
+                <div class="mb-2">
+                  <label class="form-label">Select Wallet</label>
+                  <select v-model="paymentForm.selectedWallet" class="form-select" required>
+                    <option v-for="wallet in wallets" :key="wallet.id" :value="wallet.id">{{ wallet.name }}</option>
+                  </select>
+                </div>
+                <div class="mb-2">
+                  <label class="form-label">Wallet ID</label>
+                  <input v-model="paymentForm.walletId" type="text" class="form-control" required />
+                </div>
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Pay To</label>
+                <select v-model="paymentForm.payTo" class="form-select" required>
+                  <option v-for="dest in payDestinations" :key="dest.id" :value="dest.id">{{ dest.name }}</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-success w-100">Pay</button>
+            </form>
           </div>
         </div>
       </div>
@@ -107,7 +180,36 @@ export default {
       showModal: false,
       modalMessage: '',
       showPaymentMethodModal: false,
+      showPaymentDetailsModal: false,
       selectedPaymentMethod: null,
+      paymentForm: {
+        name: '',
+        email: '',
+        cardNumber: '',
+        expiry: '',
+        cvv: '',
+        selectedBank: '',
+        accountNumber: '',
+        selectedWallet: '',
+        walletId: '',
+        payTo: '',
+      },
+      banks: [
+        { code: '044', name: 'Access Bank' },
+        { code: '011', name: 'First Bank' },
+        { code: '058', name: 'GTBank' },
+        { code: '232', name: 'Sterling Bank' },
+      ],
+      wallets: [
+        { id: 'opay', name: 'OPay' },
+        { id: 'palmpay', name: 'PalmPay' },
+        { id: 'kuda', name: 'Kuda' },
+      ],
+      payDestinations: [
+        { id: 'mainacct', name: 'Main Business Account' },
+        { id: 'altacct', name: 'Alternate Account' },
+        { id: 'wallet', name: 'Business Wallet' },
+      ],
     };
   },
   computed: {
@@ -158,23 +260,76 @@ export default {
     selectPaymentMethod(method) {
       this.selectedPaymentMethod = method;
       this.showPaymentMethodModal = false;
-      this.checkout();
+      this.resetPaymentForm();
+      this.showPaymentDetailsModal = true;
     },
-    checkout() {
-      const email = this.userEmail || this.cart[0]?.email || "test@example.com";
+    closePaymentDetailsModal() {
+      this.showPaymentDetailsModal = false;
+    },
+    resetPaymentForm() {
+      this.paymentForm = {
+        name: '',
+        email: '',
+        cardNumber: '',
+        expiry: '',
+        cvv: '',
+        selectedBank: '',
+        accountNumber: '',
+        selectedWallet: '',
+        walletId: '',
+        payTo: '',
+      };
+    },
+    submitPaymentDetails() {
+      // Validate form (basic)
+      if (!this.paymentForm.name || !this.paymentForm.email || !this.paymentForm.payTo) {
+        this.showFeedback('Please fill in all required fields.');
+        return;
+      }
+      if (this.selectedPaymentMethod === 'card' && (!this.paymentForm.cardNumber || !this.paymentForm.expiry || !this.paymentForm.cvv)) {
+        this.showFeedback('Please fill in all card details.');
+        return;
+      }
+      if (this.selectedPaymentMethod === 'bank' && (!this.paymentForm.selectedBank || !this.paymentForm.accountNumber)) {
+        this.showFeedback('Please fill in all bank details.');
+        return;
+      }
+      if (this.selectedPaymentMethod === 'wallet' && (!this.paymentForm.selectedWallet || !this.paymentForm.walletId)) {
+        this.showFeedback('Please fill in all wallet details.');
+        return;
+      }
+      this.showPaymentDetailsModal = false;
+      this.checkoutWithForm();
+    },
+    checkoutWithForm() {
+      const email = this.paymentForm.email;
       const amount = this.totalPrice * 100;
-
       if (!window.PaystackPop) {
         this.showFeedback('Payment system not loaded. Please check your internet connection.');
         return;
       }
-
       // Map our method to Paystack channels
       let channels = ['card'];
       if (this.selectedPaymentMethod === 'bank') {
         channels = ['bank'];
+      } else if (this.selectedPaymentMethod === 'wallet') {
+        channels = ['ussd', 'mobile_money', 'wallet'];
       }
-
+      // Add metadata for destination
+      const metadata = {
+        custom_fields: [
+          { display_name: 'Pay To', variable_name: 'pay_to', value: this.paymentForm.payTo },
+          { display_name: 'Payer Name', variable_name: 'payer_name', value: this.paymentForm.name },
+        ]
+      };
+      if (this.selectedPaymentMethod === 'bank') {
+        metadata.custom_fields.push({ display_name: 'Bank', variable_name: 'bank', value: this.paymentForm.selectedBank });
+        metadata.custom_fields.push({ display_name: 'Account Number', variable_name: 'account_number', value: this.paymentForm.accountNumber });
+      }
+      if (this.selectedPaymentMethod === 'wallet') {
+        metadata.custom_fields.push({ display_name: 'Wallet', variable_name: 'wallet', value: this.paymentForm.selectedWallet });
+        metadata.custom_fields.push({ display_name: 'Wallet ID', variable_name: 'wallet_id', value: this.paymentForm.walletId });
+      }
       const handler = window.PaystackPop.setup({
         key: 'pk_test_055ff01887157684e74ac380a88d95b89ad6192f',
         email: email,
@@ -182,6 +337,7 @@ export default {
         currency: "NGN",
         ref: '' + Math.floor(Math.random() * 1000000000 + 1),
         channels: channels,
+        metadata: metadata,
         callback: (response) => {
           this.handlePaymentSuccess(response);
         },
@@ -206,12 +362,10 @@ export default {
         this.showFeedback('Failed to fetch user data.');
         return;
       }
-
       // Prepare arrays if not present
       if (!user.broughtBooks) user.broughtBooks = [];
       if (!user.borrowedBooks) user.borrowedBooks = [];
       if (!user.transactionHistory) user.transactionHistory = [];
-
       this.cart.forEach(item => {
         const bookData = {
           ...item,
@@ -235,7 +389,6 @@ export default {
           });
         }
       });
-
       // Save updated user to API
       try {
         await mockstorage.updateUser(this.userId, user);
@@ -244,17 +397,14 @@ export default {
         this.showFeedback('Failed to save to server. Please try again.');
         return;
       }
-
       // Optionally: Save to localStorage (per user, if needed)
       localStorage.setItem(`broughtBooks_${this.userId}`, JSON.stringify(user.broughtBooks));
       localStorage.setItem(`borrowedBooks_${this.userId}`, JSON.stringify(user.borrowedBooks));
       localStorage.setItem(`transactionHistory_${this.userId}`, JSON.stringify(user.transactionHistory));
-
       // Clear cart
       localStorage.removeItem('cart');
       this.cart = [];
       window.dispatchEvent(new CustomEvent('cart-updated', { detail: 0 }));
-
       this.loading = false;
       this.showFeedback('Payment complete! Reference: ' + response.reference);
     }

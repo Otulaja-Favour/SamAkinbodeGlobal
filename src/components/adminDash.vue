@@ -4,7 +4,7 @@
   <div>
     <!-- Responsive Navbar -->
     <nav class="admin-navbar">
-      <ul>
+      <ul class="py-2">
         <li class="d-none d-lg-block bookvault-title">
           <i class="fas fa-book-reader me-2"></i>BookVault 
         </li>
@@ -66,18 +66,18 @@
               <div class="bg-white p-4 rounded" style="min-width:350px;max-width:500px;">
                 <h5 class="mb-3">{{ modalMode === 'edit' ? 'Edit Book' : 'Add Book' }}</h5>
                 <form @submit.prevent="addOrUpdateBook">
-                  <div class="mb-2">
+                  <div class="mb-2" style="display: flex;">
                     <input v-model="bookForm.title" type="text" class="form-control" placeholder="Title" required>
-                  </div>
-                  <div class="mb-2">
                     <input v-model="bookForm.author" type="text" class="form-control" placeholder="Author" required>
                   </div>
-                  <div class="mb-2">
+                  <div class="mb-2" style="display: flex;">
                     <input v-model.number="bookForm.price" type="number" class="form-control" placeholder="Buy Amount (₦)" required>
-                  </div>
-                  <div class="mb-2">
                     <input v-model.number="bookForm.rent" type="number" class="form-control" placeholder="Rent Amount (₦)" required>
                   </div>
+                  <!-- <div class="mb-2">
+                  </div>
+                  <div class="mb-2">
+                  </div> -->
                   <div class="mb-2">
                     <textarea v-model="bookForm.description" class="form-control" :maxlength="2500" rows="5" placeholder="Description (max 400 words)" required></textarea>
                     <div class="small text-muted">{{ wordCount(bookForm.description) }}/400 words</div>
@@ -86,7 +86,7 @@
                     <label class="form-label">Cover Image</label>
                     <input type="file" class="form-control" accept="image/*" @change="handleImageUpload">
                     <div v-if="bookForm.image" class="mt-2">
-                      <img :src="bookForm.image" alt="Preview" style="max-width: 120px; max-height: 120px; object-fit:cover;">
+                      <img :src="bookForm.image" alt="Preview" style="max-width: 120px; max-height: 100px; object-fit:cover;">
                       <div class="small text-muted">Cover Preview</div>
                     </div>
                   </div>
@@ -640,6 +640,11 @@ export default {
   color: #fff;
   padding: 12px 0;
 }
+textarea{
+  height: 90px;
+  resize: none;
+  overflow-y: scroll;
+}
 @media (max-width: 991px) {
   .bookvault-title {
     display: none !important;
@@ -688,8 +693,11 @@ export default {
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.3);
   z-index: 1040;
+  width: 100%;
 }
 .modal {
+  overflow-y: scroll;
+  margin: 40px 0px;
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   display: flex;
@@ -699,7 +707,7 @@ export default {
 }
 .custom-modal-backdrop {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 10px; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.3);
   z-index: 1050;
 }
@@ -716,4 +724,32 @@ export default {
   gap: 8px;
   margin-bottom: 1rem;
 }
+
+@media screen and (max-width:900px) {
+  .nav-label {
+  display: none;
+
+}
+.admin-navbar li i {
+  padding: 10px 0px;
+}
+
+
+.modal {
+  overflow: scroll;
+  padding: 300px 0px;
+  margin: 10px 0px;
+  position: unset;
+}
+  .modal-backdrop {
+overflow-y: scroll;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 1040;
+  width: 100%;
+}
+
+}
+
 </style>
