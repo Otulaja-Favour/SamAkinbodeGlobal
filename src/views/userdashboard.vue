@@ -24,7 +24,7 @@
 
     <div class="row" v-else>
       <div
-        class="col-md-4 mb-4"
+        class="col-md-3 mb-4"
         v-for="book in randomBooks"
         :key="book.id"
       >
@@ -56,8 +56,9 @@
 <script>
 import navBar from '@/components/navBar.vue';
 import booksstore from '@/stores/booksstore';
+
 export default {
-  components: {navBar},
+  components: { navBar },
   data() {
     return {
       books: [],
@@ -88,7 +89,8 @@ export default {
   },
   async mounted() {
     this.loading = true;
-    this.books = await booksstore.fetchBooks();
+    // Fetch books from the bookstore API, not fetchBooks (should be fetchAllBooks)
+    this.books = await booksstore.fetchAllBooks();
     this.loading = false;
   }
 };

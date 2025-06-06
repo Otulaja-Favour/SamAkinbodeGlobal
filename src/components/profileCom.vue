@@ -88,34 +88,33 @@
         </div>
 
         <!-- My Rentals -->
-       
         <div v-else-if="dashboardTab === 'rentals'">
-  <h4>My Rentals ({{ rentedBooks.length }})</h4>
-  <div v-if="rentedBooks.length === 0" class="alert alert-info">No books rented yet.</div>
-  <div class="row" v-else>
-    <div class="col-md-4 mb-3" v-for="(book, idx) in rentedBooks" :key="book.id">
-      <div class="card h-100">
-        <img v-if="book.image" :src="book.image" class="card-img-top" style="height:180px;object-fit:cover;">
-        <div class="card-body">
-          <h5 class="card-title">{{ book.title }}</h5>
-          <p class="card-text">{{ book.author }}</p>
-             
-          <span class="badge bg-success">Rented</span> <span class="btn btn-outline-danger btn-sm" @click="returnRentedBook(idx)" >   <i class="fas fa-undo"></i> Return </span>
-          <div class="d-flex align-items-center mt-2">
-            <button class="btn btn-outline-primary btn-sm me-2" @click="viewBook(book)">
-              <i class="fas fa-eye"></i> Read
-            </button>
-            <button class="btn btn-outline-secondary btn-sm me-2" @click="showCommentModal(book, idx, 'rented')">
-              <i class="fas fa-comment"></i> Comment
-            </button>
-            
+          <h4>My Rentals ({{ rentedBooks.length }})</h4>
+          <div v-if="rentedBooks.length === 0" class="alert alert-info">No books rented yet.</div>
+          <div class="row" v-else>
+            <div class="col-md-4 mb-3" v-for="(book, idx) in rentedBooks" :key="book.id">
+              <div class="card h-100">
+                <img v-if="book.image" :src="book.image" class="card-img-top" style="height:180px;object-fit:cover;">
+                <div class="card-body">
+                  <h5 class="card-title">{{ book.title }}</h5>
+                  <p class="card-text">{{ book.author }}</p>
+                  <span class="badge bg-success">Rented</span>
+                  <span class="btn btn-outline-danger btn-sm" @click="returnRentedBook(idx)">
+                    <i class="fas fa-undo"></i> Return
+                  </span>
+                  <div class="d-flex align-items-center mt-2">
+                    <button class="btn btn-outline-primary btn-sm me-2" @click="viewBook(book)">
+                      <i class="fas fa-eye"></i> Read
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm me-2" @click="showCommentModal(book, idx, 'rented')">
+                      <i class="fas fa-comment"></i> Comment
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
-
 
         <!-- Transactions -->
         <div v-else-if="dashboardTab === 'transactions'">
@@ -174,7 +173,10 @@
                     <label class="form-label">Details</label>
                     <textarea v-model="appointment.details" class="form-control" required></textarea>
                   </div>
-                  <button class="btn btn-success" type="submit">Send</button>
+                  <button class="btn btn-success" type="submit" :disabled="appointmentLoading">
+                    <span v-if="appointmentLoading" class="spinner-border spinner-border-sm"></span>
+                    <span v-else>Send</span>
+                  </button>
                 </form>
               </div>
             </div>
@@ -193,7 +195,10 @@
               <label class="form-label">Email</label>
               <input v-model="user.email" type="email" class="form-control" required>
             </div>
-            <button class="btn btn-primary" type="submit">Save Changes</button>
+            <button class="btn btn-primary" type="submit" :disabled="settingsLoading">
+              <span v-if="settingsLoading" class="spinner-border spinner-border-sm"></span>
+              <span v-else>Save Changes</span>
+            </button>
           </form>
           <div class="mt-4">
             <h6>Your Details:</h6>
@@ -213,7 +218,10 @@
             </div>
             <div class="modal-body">
               <input v-model="commentText" class="form-control mb-2" placeholder="Type your comment..." />
-              <button class="btn btn-success" @click="addCommentToBook">Submit</button>
+              <button class="btn btn-success" @click="addCommentToBook" :disabled="commentLoading">
+                <span v-if="commentLoading" class="spinner-border spinner-border-sm"></span>
+                <span v-else>Submit</span>
+              </button>
               <div v-if="currentBook.comments && currentBook.comments.length" class="mt-3">
                 <div class="fw-bold">Comments:</div>
                 <ul class="list-unstyled mb-0">
@@ -256,7 +264,10 @@ export default {
       currentBookIdx: null,
       currentBookType: "",
       showAppointmentModal: false,
-      appointment: { subject: "", details: "" }
+      appointment: { subject: "", details: "" },
+      commentLoading: false,
+      appointmentLoading: false,
+      settingsLoading: false
     };
   },
   computed: {
@@ -276,19 +287,25 @@ export default {
       if (user.id) localStorage.setItem("userId", user.id);
     }
     this.user = user;
-    // Fetch only books and transactions for this user
-    this.ownedBooks = await mockstorage.fetchBroughtBooks(user.id);
-    this.rentedBooks = await mockstorage.fetchBorrowedBooks(user.id);
-    this.transactionHistory = await mockstorage.fetchTransactionHistory(user.id);
-    this.appointments = await mockstorage.fetchAppointments(user.id);
+
+    // Fetch books and transactions for this user from their arrays
+    this.ownedBooks = user.broughtBooks || [];
+    this.rentedBooks = user.borrowedBooks || [];
+    this.transactionHistory = user.transactionHistory || [];
+    this.appointments = user.appointments || [];
   },
   methods: {
-    saveSettings() {
-      mockstorage.saveUser(this.user);
-      toast.success("Profile updated!");
+    async saveSettings() {
+      this.settingsLoading = true;
+      try {
+        await mockstorage.saveUser(this.user);
+        toast.success("Profile updated!");
+      } finally {
+        this.settingsLoading = false;
+      }
     },
     viewBook(book) {
-      window.open(book.fileUrl || "https://www.wps.com/", "_blank");
+      window.open(book.pdfUrl, "_blank");
     },
     showCommentModal(book, idx, type) {
       this.currentBook = book;
@@ -304,43 +321,50 @@ export default {
       this.currentBookType = "";
       this.commentText = "";
     },
-
-
-  // ...existing code...
-  async returnRentedBook(idx) {
-    const book = this.rentedBooks[idx];
-    // Remove from local array
-    this.rentedBooks.splice(idx, 1);
-    // Remove from API (implement this in your mockstorage)
-    await mockstorage.removeBorrowedBook(book.id, this.user.id);
-    toast.success("Book returned successfully!");
-  },
-
+    async returnRentedBook(idx) {
+      const book = this.rentedBooks[idx];
+      this.rentedBooks.splice(idx, 1);
+      this.user.borrowedBooks = this.rentedBooks;
+      await mockstorage.updateUser(this.user.id, this.user);
+      toast.success("Book returned successfully!");
+    },
     async addCommentToBook() {
       if (!this.commentText) return;
-      if (!this.currentBook.comments) this.currentBook.comments = [];
-      this.currentBook.comments.push(this.commentText);
+      this.commentLoading = true;
+      try {
+        if (!this.currentBook.comments) this.currentBook.comments = [];
+        this.currentBook.comments.push(this.commentText);
 
-      if (this.currentBookType === "owned") {
-        this.ownedBooks.splice(this.currentBookIdx, 1, this.currentBook);
-        await mockstorage.saveBookComment(this.currentBook.id, this.currentBook.comments);
-      } else if (this.currentBookType === "rented") {
-        this.rentedBooks.splice(this.currentBookIdx, 1, this.currentBook);
-        await mockstorage.saveBookComment(this.currentBook.id, this.currentBook.comments);
+        if (this.currentBookType === "owned") {
+          this.ownedBooks.splice(this.currentBookIdx, 1, this.currentBook);
+        } else if (this.currentBookType === "rented") {
+          this.rentedBooks.splice(this.currentBookIdx, 1, this.currentBook);
+        }
+        await mockstorage.updateUser(this.user.id, this.user);
+        this.closeCommentModal();
+        toast.success("Comment added!");
+      } finally {
+        this.commentLoading = false;
       }
-      this.closeCommentModal();
-      toast.success("Comment added!");
     },
     async submitAppointment() {
-      await mockstorage.saveAppointment({
-        ...this.appointment,
-        userId: this.user.id,
-        date: new Date().toLocaleString()
-      });
-      toast.success("Appointment created!");
-      this.showAppointmentModal = false;
-      this.appointment = { subject: "", details: "" };
-      this.appointments = await mockstorage.fetchAppointments(this.user.id);
+      this.appointmentLoading = true;
+      try {
+        const newApp = {
+          ...this.appointment,
+          userId: this.user.id,
+          date: new Date().toLocaleString()
+        };
+        if (!this.user.appointments) this.user.appointments = [];
+        this.user.appointments.push(newApp);
+        await mockstorage.updateUser(this.user.id, this.user);
+        toast.success("Appointment created!");
+        this.showAppointmentModal = false;
+        this.appointment = { subject: "", details: "" };
+        this.appointments = this.user.appointments;
+      } finally {
+        this.appointmentLoading = false;
+      }
     }
   }
 };

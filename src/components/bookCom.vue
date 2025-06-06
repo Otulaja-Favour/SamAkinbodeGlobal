@@ -1,9 +1,23 @@
 <template>
   <div class="container-fluid p-0">
-    <!-- Navbar Component (imported, not hardcoded here) -->
     <nav-bar :cart-count="cartCount" />
 
-    <h3 class="m-3">All Available Books</h3>
+    <div class="d-flex flex-wrap align-items-center gap-3 my-3">
+      <h3 class="m-3">All Available Books</h3>
+      <input
+        v-model="search"
+        class="form-control"
+        style="max-width: 300px;"
+        placeholder="Search by title, author, or description..."
+      />
+      <select v-model="sortBy" class="form-select" style="max-width: 200px;">
+        <option value="">Sort By</option>
+        <option value="date">Date Added (Newest)</option>
+        <option value="priceLow">Price: Low to High</option>
+        <option value="priceHigh">Price: High to Low</option>
+      </select>
+    </div>
+
 
     <!-- Spinner Loader -->
     <div v-if="loading" class="spinner-container">
@@ -13,10 +27,10 @@
     </div>
 
     <!-- Book List -->
-    <div v-else>
+    <div class="p-3"  v-else>
       <div class="row">
         <div
-          class="col-md-4 mb-4"
+          class="col-md-3 mb-4"
           v-for="book in paginatedBooks"
           :key="book.id"
         >
@@ -26,7 +40,7 @@
               :src="book.image"
               class="card-img-top"
               alt="Book cover"
-              style="height: 250px; object-fit: cover;"
+              style="height: 200px; object-fit: cover;"
             />
             <div class="card-body">
               <h5 class="card-title">{{ book.title }}</h5>
@@ -141,27 +155,64 @@ export default {
       selectedBook: {},
       cart: JSON.parse(localStorage.getItem('cart')) || [],
       cartCount: JSON.parse(localStorage.getItem('cart'))?.length || 0,
-      loading: true
+      loading: true,
+      search: "",
+      sortBy: ""
     }
   },
   computed: {
+    filteredBooks() {
+      let filtered = this.books;
+      if (this.search) {
+        const s = this.search.toLowerCase();
+        filtered = filtered.filter(
+          (b) =>
+            (b.title && b.title.toLowerCase().includes(s)) ||
+            (b.author && b.author.toLowerCase().includes(s)) ||
+            (b.description && b.description.toLowerCase().includes(s))
+        );
+      }
+      // Sort
+      if (this.sortBy === "date") {
+        // If your API provides a date field, use it. Otherwise, fallback to id (assuming higher id is newer)
+        filtered = filtered.slice().sort((a, b) => {
+          if (a.dateAdded && b.dateAdded) {
+            return new Date(b.dateAdded) - new Date(a.dateAdded);
+          }
+          return Number(b.id) - Number(a.id);
+        });
+      } else if (this.sortBy === "priceLow") {
+        filtered = filtered.slice().sort((a, b) => Number(a.price) - Number(b.price));
+      } else if (this.sortBy === "priceHigh") {
+        filtered = filtered.slice().sort((a, b) => Number(b.price) - Number(a.price));
+      }
+      return filtered;
+    },
     paginatedBooks() {
       const start = (this.currentPage - 1) * this.pageSize;
-      return this.books.slice(start, start + this.pageSize);
+      return this.filteredBooks.slice(start, start + this.pageSize);
     },
     totalPages() {
-      return Math.ceil(this.books.length / this.pageSize);
+      return Math.ceil(this.filteredBooks.length / this.pageSize);
     },
   },
   async mounted() {
     this.loading = true;
-    this.books = await booksstore.fetchBooks();
+    this.books = await booksstore.fetchAllBooks();
     this.loading = false;
     this.updateCartIcon();
     window.addEventListener('cart-updated', this.handleCartUpdate);
   },
   beforeUnmount() {
     window.removeEventListener('cart-updated', this.handleCartUpdate);
+  },
+  watch: {
+    search() {
+      this.currentPage = 1;
+    },
+    sortBy() {
+      this.currentPage = 1;
+    }
   },
   methods: {
     goToPage(page) {
@@ -184,21 +235,19 @@ export default {
       );
     },
     addToCart(book, type) {
-      // Prevent adding both buy and borrow for the same book
       if (this.isInCart(book, type === 'buy' ? 'borrow' : 'buy')) {
         this.showToast(
           `You can't ${type} this book because it's already in your cart as ${type === 'buy' ? 'rent' : 'buy'}.`
         );
         return;
       }
-      // Prevent duplicate add
       if (this.isInCart(book, type)) {
         this.showToast(`Already in cart as ${type}.`);
         return;
       }
       const cartItem = {
         ...book,
-        action: type, // 'buy' or 'borrow'
+        action: type,
         price: type === 'buy' ? book.price : book.rent,
       };
       this.cart.push(cartItem);
@@ -216,7 +265,6 @@ export default {
       this.cartCount = e.detail;
     },
     showToast(message) {
-      // Simple toast implementation
       const toast = document.createElement('div');
       toast.textContent = message;
       toast.style.position = 'fixed';
