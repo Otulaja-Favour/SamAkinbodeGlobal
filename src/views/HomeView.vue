@@ -149,7 +149,7 @@ async validateLogin() {
         toast.error('Invalid email or password');
       }
     } catch (err) {
-      toast.error('Error connecting to server');
+      toast.error('Internet Error');
     } finally {
       this.isSubmitting = false;
     }
