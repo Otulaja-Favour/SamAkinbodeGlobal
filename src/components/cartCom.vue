@@ -407,6 +407,7 @@ export default {
       window.dispatchEvent(new CustomEvent('cart-updated', { detail: 0 }));
       this.loading = false;
       this.showFeedback('Payment complete! Reference: ' + response.reference);
+      this.$router('/profile')
     }
   }
 };

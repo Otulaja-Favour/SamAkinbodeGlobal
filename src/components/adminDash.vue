@@ -41,7 +41,7 @@
           </div>
           <hr>
           <h5>Recent Activities</h5>
-          <ul class="list-group">
+          <ul class="list-group" style="overflow-y: scroll; height: 230px;">
             <li class="list-group-item" v-for="(activity, idx) in recentActivities" :key="idx">
               {{ activity }}
             </li>

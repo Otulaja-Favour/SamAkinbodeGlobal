@@ -55,7 +55,7 @@
                 Buy: ₦{{ book.price }}
                 <span class="card-text fw-bold">Rent: ₦{{ book.rent }}</span>
               </p>
-              <button class="btn btn-primary btn-sm mt-2" @click="openModal(book)">View</button>
+              <button class="btn btn-primary btn-sm mt-2" style="width: 90%; margin: 0 auto ; display: flex; justify-content: center;" @click="openModal(book)">View</button>
             </div>
           </div>
         </div>
