@@ -3,7 +3,19 @@
     <div class="landingPage">
       <transition name="slide-left">
         <div class="imageAspect" v-if="showPage">
-          <img src="../assets/images/JARIPEO.jpeg" alt="">
+          <div id="carouselExampleSlidesOnly" class="carousel slide" data-bs-ride="carousel">
+  <div class="carousel-inner">
+    <div class="carousel-item active">
+      <img src="../assets/images/JARIPEO.jpeg" class="d-block w-100" alt="...">
+    </div>
+    <div class="carousel-item">
+      <img src="../assets/images/ja" class="d-block w-100" alt="...">
+    </div>
+    <div class="carousel-item">
+      <img src="..." class="d-block w-100" alt="...">
+    </div>
+  </div>
+</div>
         </div>
       </transition>
 
