@@ -22,7 +22,7 @@
       </div>
     </div>
 
-    <div class="row" v-else>
+    <div class="row p-4" v-else>
       <div
         class="col-md-3 mb-4"
         v-for="book in randomBooks"
