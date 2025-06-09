@@ -319,6 +319,11 @@
       </section>
     </div>
   </div>
+  <footer class="text-white text-center  footer" style="background-color: #2c3e50; padding: 40px 0px; ">
+    <div class="container">
+      <p class="mb-0">© 2025 Library Management System. All rights reserved.</p>
+    </div>
+  </footer>
 </template>
 
 <script>

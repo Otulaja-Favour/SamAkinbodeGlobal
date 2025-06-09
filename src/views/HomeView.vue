@@ -14,19 +14,15 @@
   </div>
   <div class="carousel-inner">
     <div class="carousel-item active">
-      <img src="../assets/images/jas.jpeg" class="d-block w-100" alt="...">
+      <img src="../assets/images/jag.jpg" class="d-block w-100" alt="...">
 
     </div>
   
     <div class="carousel-item">
-      <img src="../assets/images/jag.jpeg" class="d-block w-100" alt="...">
+      <img src="../assets/images/jay.jpg" class="d-block w-100" alt="...">
     </div>
     <div class="carousel-item">
-      <img src="../assets/images/jaj.jpeg" class="d-block w-100" alt="...">
-    </div>
-    
-    <div class="carousel-item">
-      <img src="../assets/images/jay.jpeg" class="d-block w-100" alt="...">
+      <img src="../assets/images/jaj.jpg" class="d-block w-100" alt="...">
     </div>
     
   </div>
@@ -107,6 +103,11 @@
       </transition>
     </div>
   </div>
+  <footer class="text-white text-center  footer" style="background-color: #2c3e50; padding: 40px 0px; ">
+    <div class="container">
+      <p class="mb-0">© 2025 Library Management System. All rights reserved.</p>
+    </div>
+  </footer>
 </template>
 <script>
 import mockstorage from '@/stores/mockstorage.js'
@@ -290,7 +291,6 @@ label{
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid green;
   border-radius: 30px;
 }
 .imageAspect img{
@@ -337,36 +337,20 @@ label{
   }
 }
 @media screen and (max-width: 700px) {
-  .landingPage {
-    position: relative;
-    flex-direction: column;
-    align-items: stretch !important;
-    min-height: unset;
-    height: auto;
-    background-image: url('../assets/images/JARIPEO.jpeg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-  }
-  .landingPage::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
-    z-index: 0;
-    pointer-events: none;
-  }
-  .authentications {
-    position: relative;
-    z-index: 1;
+  .landingPage{
     width: 100%;
-    padding: 16px;
-    max-height: unset;
-    background: rgba(255,255,255,0.95); 
-    box-shadow: 0px 0px 10px 0px;
   }
+  .authentications{
+    width: 100%;
+    padding: 0;
+    overflow: scroll;
+  }
+
   .imageAspect {
     display: none;
+  }
+  .footer{
+    margin: 0px !important;
   }
 }
 </style>
