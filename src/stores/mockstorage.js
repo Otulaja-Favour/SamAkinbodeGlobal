@@ -142,6 +142,7 @@ export default {
       return JSON.parse(localStorage.getItem('transactionHistory') || '[]');
     }
   },
+  
 
   // Save a comment to a book (by id)
   async saveBookComment(bookId, comments) {

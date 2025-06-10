@@ -1,12 +1,15 @@
+```vue
 <template>
   <div class="container-fluid p-0">
     <div class="container my-5">
       <h3 class="mb-4">Cart Summary</h3>
-      <div v-if="cart.length === 0" class="alert alert-info">
+      <div v-if="isCartEmpty" class="alert alert-info">
         Your cart is empty.
-        <router-link to="/books"><button class="btn btn-primary">Browse books</button></router-link>
+        <router-link to="/books">
+          <button class="btn btn-primary">Browse books</button>
+        </router-link>
       </div>
-      <div class="table-responsive" v-else>
+      <div v-else class="table-responsive">
         <table class="table table-bordered align-middle">
           <thead class="table-light">
             <tr>
@@ -20,14 +23,14 @@
           <tbody>
             <tr v-for="(item, idx) in cart" :key="idx">
               <td>
-                <img :src="item.image" alt="Book cover" style="width: 70px; height: 90px; object-fit: cover; border-radius: 4px;" />
+                <img :src="item.image" alt="Book cover" class="cart-img" />
               </td>
               <td>{{ item.title }}</td>
               <td class="text-capitalize">{{ item.action }}</td>
               <td>{{ item.price }}</td>
               <td>
                 <button class="btn btn-danger btn-sm" @click="deleteItem(idx)">
-                  <i class="fas fa-trash"></i> 
+                  <i class="fas fa-trash"></i>
                 </button>
               </td>
             </tr>
@@ -37,7 +40,7 @@
           <h5>Total: <span class="text-success">₦{{ totalPrice }}</span></h5>
         </div>
         <div class="d-flex justify-content-end mt-3">
-          <button class="btn btn-success" @click="openPaymentMethodModal" :disabled="cart.length === 0">
+          <button class="btn btn-success" @click="checkoutDirect" :disabled="isCartEmpty">
             Proceed to Checkout
           </button>
         </div>
@@ -57,7 +60,7 @@
       </div>
     </div>
 
-    <!-- Feedback Modal -->
+    <!-- Feedback Modal (for errors) -->
     <div v-if="showModal" class="modal-backdrop show" style="z-index: 2000;"></div>
     <div v-if="showModal" class="modal d-block" tabindex="-1" style="z-index: 2050; background: rgba(0,0,0,0.2);">
       <div class="modal-dialog modal-dialog-centered">
@@ -76,172 +79,104 @@
       </div>
     </div>
 
-    <!-- Payment Method Modal -->
-    <div v-if="showPaymentMethodModal" class="modal-backdrop show" style="z-index: 2000;"></div>
-    <div v-if="showPaymentMethodModal" class="modal d-block" tabindex="-1" style="z-index: 2050; background: rgba(0,0,0,0.2);">
-      <div class="modal-dialog modal-dialog-centered">
+    <!-- Order Confirmation Modal -->
+    <div v-if="showOrderModal" class="modal-backdrop show" style="z-index: 2000;"></div>
+    <div v-if="showOrderModal" class="modal d-block" tabindex="-1" style="z-index: 2050; background: rgba(0,0,0,0.2);">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Select Payment Method</h5>
-            <button type="button" class="btn-close" @click="closePaymentMethodModal"></button>
+            <h5 class="modal-title">Order Confirmed</h5>
+            <button type="button" class="btn-close" @click="closeOrderModal"></button>
           </div>
           <div class="modal-body">
-            <button class="btn btn-outline-primary w-100 mb-2" @click="selectPaymentMethod('card')">Pay with Card</button>
-            <button class="btn btn-outline-success w-100 mb-2" @click="selectPaymentMethod('bank')">Pay with Bank Transfer</button>
-            <button class="btn btn-outline-info w-100" @click="selectPaymentMethod('wallet')">Pay with Wallet</button>
+            <p class="text-success">Your order has been confirmed!</p>
+            <p><strong>Order placed on:</strong> {{ orderDate }}</p>
+            <p><strong>Reference:</strong> {{ orderReference }}</p>
+            <p><strong>Total Amount:</strong> ₦{{ totalPrice }}</p>
+            <h6>Bought Books</h6>
+            <ul v-if="orderBooks.filter(b => b.action === 'buy').length > 0" class="list-group mb-3">
+              <li v-for="book in orderBooks.filter(b => b.action === 'buy')" :key="book.title" class="list-group-item d-flex align-items-center">
+                <img :src="book.image" alt="Book cover" class="cart-img me-2" style="width: 50px; height: 70px;" />
+                <span>{{ book.title }} - ₦{{ book.price }}</span>
+              </li>
+            </ul>
+            <p v-else>No books bought.</p>
+            <h6>Borrowed Books</h6>
+            <ul v-if="orderBooks.filter(b => b.action === 'borrow').length > 0" class="list-group">
+              <li v-for="book in orderBooks.filter(b => b.action === 'borrow')" :key="book.title" class="list-group-item d-flex align-items-center">
+                <img :src="book.image" alt="Book cover" class="cart-img me-2" style="width: 50px; height: 70px;" />
+                <span>{{ book.title }} - ₦{{ book.price }}</span>
+              </li>
+            </ul>
+            <p v-else>No books borrowed.</p>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Payment Details Modal -->
-    <div v-if="showPaymentDetailsModal" class="modal-backdrop show" style="z-index: 2000;"></div>
-    <div v-if="showPaymentDetailsModal" class="modal d-block" tabindex="-1" style="z-index: 2050; background: rgba(0,0,0,0.2);">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Enter Payment Details</h5>
-            <button type="button" class="btn-close" @click="closePaymentDetailsModal"></button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="submitPaymentDetails">
-              <div class="mb-2">
-                <label class="form-label">Name</label>
-                <input v-model="paymentForm.name" type="text" class="form-control" required />
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Email</label>
-                <input v-model="paymentForm.email" type="email" class="form-control" required />
-              </div>
-              <div v-if="selectedPaymentMethod === 'card'">
-                <div class="mb-2">
-                  <label class="form-label">Card Number</label>
-                  <input v-model="paymentForm.cardNumber" type="text" class="form-control" maxlength="19" required />
-                </div>
-                <div class="mb-2 d-flex">
-                  <div class="me-2 flex-fill">
-                    <label class="form-label">Expiry</label>
-                    <input v-model="paymentForm.expiry" type="text" class="form-control" placeholder="MM/YY" required />
-                  </div>
-                  <div class="flex-fill">
-                    <label class="form-label">CVV</label>
-                    <input v-model="paymentForm.cvv" type="text" class="form-control" maxlength="4" required />
-                  </div>
-                </div>
-              </div>
-              <div v-if="selectedPaymentMethod === 'bank'">
-                <div class="mb-2">
-                  <label class="form-label">Select Bank</label>
-                  <select v-model="paymentForm.selectedBank" class="form-select" required>
-                    <option v-for="bank in banks" :key="bank.code" :value="bank.code">{{ bank.name }}</option>
-                  </select>
-                </div>
-                <div class="mb-2">
-                  <label class="form-label">Account Number</label>
-                  <input v-model="paymentForm.accountNumber" type="text" class="form-control" maxlength="10" required />
-                </div>
-              </div>
-              <div v-if="selectedPaymentMethod === 'wallet'">
-                <div class="mb-2">
-                  <label class="form-label">Select Wallet</label>
-                  <select v-model="paymentForm.selectedWallet" class="form-select" required>
-                    <option v-for="wallet in wallets" :key="wallet.id" :value="wallet.id">{{ wallet.name }}</option>
-                  </select>
-                </div>
-                <div class="mb-2">
-                  <label class="form-label">Wallet ID</label>
-                  <input v-model="paymentForm.walletId" type="text" class="form-control" required />
-                </div>
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Pay To</label>
-                <select v-model="paymentForm.payTo" class="form-select" required>
-                  <option v-for="dest in payDestinations" :key="dest.id" :value="dest.id">{{ dest.name }}</option>
-                </select>
-              </div>
-              <button type="submit" class="btn btn-success w-100">Pay</button>
-            </form>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" @click="closeOrderModal">OK</button>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <footer class="text-white text-center  footer" style="background-color: #2c3e50; padding: 40px 0px; ">
-    <div class="container">
-      <p class="mb-0">© 2025 Library Management System. All rights reserved.</p>
-    </div>
-  </footer>
 </template>
+
 <script>
 import mockstorage from '@/stores/mockstorage';
+import axios from 'axios';
 
 export default {
+  name: 'CartCount',
   data() {
     return {
-      cart: JSON.parse(localStorage.getItem('cart')) || [],
+      cart: [],
       userId: localStorage.getItem('userId') || null,
       userEmail: '',
       loading: false,
       showModal: false,
       modalMessage: '',
-      showPaymentMethodModal: false,
-      showPaymentDetailsModal: false,
-      selectedPaymentMethod: null,
-      paymentForm: {
-        name: '',
-        email: '',
-        cardNumber: '',
-        expiry: '',
-        cvv: '',
-        selectedBank: '',
-        accountNumber: '',
-        selectedWallet: '',
-        walletId: '',
-        payTo: '',
-      },
-      banks: [
-        { code: '044', name: 'Access Bank' },
-        { code: '011', name: 'First Bank' },
-        { code: '058', name: 'GTBank' },
-        { code: '232', name: 'Sterling Bank' },
-      ],
-      wallets: [
-        { id: 'opay', name: 'OPay' },
-        { id: 'palmpay', name: 'PalmPay' },
-        { id: 'kuda', name: 'Kuda' },
-      ],
-      payDestinations: [
-        { id: 'mainacct', name: 'Main Business Account' },
-        { id: 'altacct', name: 'Alternate Account' },
-        { id: 'wallet', name: 'Business Wallet' },
-      ],
+      showOrderModal: false,
+      orderBooks: [],
+      orderDate: '',
+      orderReference: '',
     };
   },
   computed: {
+    isCartEmpty() {
+      return this.cart.length === 0;
+    },
     totalPrice() {
       return this.cart.reduce((sum, item) => sum + Number(item.price || 0), 0);
     },
   },
-  async mounted() {
-    window.addEventListener('cart-updated', this.updateCart);
-    if (this.userId) {
+  mounted() {
+    this.loadCart();
+    window.addEventListener('cart-updated', this.loadCart);
+    if (this.userId) this.fetchUserData();
+  },
+  beforeDestroy() {
+    window.removeEventListener('cart-updated', this.loadCart);
+  },
+  methods: {
+    loadCart() {
+      this.cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    },
+    async fetchUserData() {
+      if (!this.userId) {
+        this.showFeedback('No user logged in.');
+        return;
+      }
       this.loading = true;
       try {
         const user = await mockstorage.fetchUser(this.userId);
         this.userEmail = user?.email || '';
-      } catch (e) {
+        if (!this.userEmail) {
+          this.showFeedback('User email not found in database.');
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
         this.showFeedback('Failed to fetch user data.');
       } finally {
         this.loading = false;
       }
-    }
-  },
-  beforeUnmount() {
-    window.removeEventListener('cart-updated', this.updateCart);
-  },
-  methods: {
-    updateCart() {
-      this.cart = JSON.parse(localStorage.getItem('cart')) || [];
     },
     deleteItem(idx) {
       this.cart.splice(idx, 1);
@@ -256,164 +191,145 @@ export default {
       this.showModal = false;
       this.modalMessage = '';
     },
-    openPaymentMethodModal() {
-      this.showPaymentMethodModal = true;
+    closeOrderModal() {
+      this.showOrderModal = false;
+      this.orderBooks = [];
+      this.orderDate = '';
+      this.orderReference = '';
+      this.$router.push('/profile'); // Redirect to profile after closing
     },
-    closePaymentMethodModal() {
-      this.showPaymentMethodModal = false;
-    },
-    selectPaymentMethod(method) {
-      this.selectedPaymentMethod = method;
-      this.showPaymentMethodModal = false;
-      this.resetPaymentForm();
-      this.showPaymentDetailsModal = true;
-    },
-    closePaymentDetailsModal() {
-      this.showPaymentDetailsModal = false;
-    },
-    resetPaymentForm() {
-      this.paymentForm = {
-        name: '',
-        email: '',
-        cardNumber: '',
-        expiry: '',
-        cvv: '',
-        selectedBank: '',
-        accountNumber: '',
-        selectedWallet: '',
-        walletId: '',
-        payTo: '',
-      };
-    },
-    submitPaymentDetails() {
-      // Validate form (basic)
-      if (!this.paymentForm.name || !this.paymentForm.email || !this.paymentForm.payTo) {
-        this.showFeedback('Please fill in all required fields.');
-        return;
-      }
-      if (this.selectedPaymentMethod === 'card' && (!this.paymentForm.cardNumber || !this.paymentForm.expiry || !this.paymentForm.cvv)) {
-        this.showFeedback('Please fill in all card details.');
-        return;
-      }
-      if (this.selectedPaymentMethod === 'bank' && (!this.paymentForm.selectedBank || !this.paymentForm.accountNumber)) {
-        this.showFeedback('Please fill in all bank details.');
-        return;
-      }
-      if (this.selectedPaymentMethod === 'wallet' && (!this.paymentForm.selectedWallet || !this.paymentForm.walletId)) {
-        this.showFeedback('Please fill in all wallet details.');
-        return;
-      }
-      this.showPaymentDetailsModal = false;
-      this.checkoutWithForm();
-    },
-    checkoutWithForm() {
-      const email = this.paymentForm.email;
-      const amount = this.totalPrice * 100;
-      if (!window.PaystackPop) {
-        this.showFeedback('Payment system not loaded. Please check your internet connection.');
-        return;
-      }
-      // Map our method to Paystack channels
-      let channels = ['card'];
-      if (this.selectedPaymentMethod === 'bank') {
-        channels = ['bank'];
-      } else if (this.selectedPaymentMethod === 'wallet') {
-        channels = ['ussd', 'mobile_money', 'wallet'];
-      }
-      // Add metadata for destination
-      const metadata = {
-        custom_fields: [
-          { display_name: 'Pay To', variable_name: 'pay_to', value: this.paymentForm.payTo },
-          { display_name: 'Payer Name', variable_name: 'payer_name', value: this.paymentForm.name },
-        ]
-      };
-      if (this.selectedPaymentMethod === 'bank') {
-        metadata.custom_fields.push({ display_name: 'Bank', variable_name: 'bank', value: this.paymentForm.selectedBank });
-        metadata.custom_fields.push({ display_name: 'Account Number', variable_name: 'account_number', value: this.paymentForm.accountNumber });
-      }
-      if (this.selectedPaymentMethod === 'wallet') {
-        metadata.custom_fields.push({ display_name: 'Wallet', variable_name: 'wallet', value: this.paymentForm.selectedWallet });
-        metadata.custom_fields.push({ display_name: 'Wallet ID', variable_name: 'wallet_id', value: this.paymentForm.walletId });
-      }
-      const handler = window.PaystackPop.setup({
-        key: 'pk_test_055ff01887157684e74ac380a88d95b89ad6192f',
-        email: email,
-        amount: amount,
-        currency: "NGN",
-        ref: '' + Math.floor(Math.random() * 1000000000 + 1),
-        channels: channels,
-        metadata: metadata,
-        callback: (response) => {
-          this.handlePaymentSuccess(response);
-        },
-        onClose: () => {
-          this.showFeedback('Payment window closed.');
-        }
-      });
-      handler.openIframe();
-    },
-    async handlePaymentSuccess(response) {
+    async processPaymentSuccess(response) {
       if (!this.userId) {
         this.showFeedback('User not found. Please log in again.');
         return;
       }
       this.loading = true;
       const now = new Date().toLocaleString();
-      let user;
-      try {
-        user = await mockstorage.fetchUser(this.userId);
-      } catch (e) {
-        this.loading = false;
-        this.showFeedback('Failed to fetch user data.');
-        return;
-      }
-      // Prepare arrays if not present
-      if (!user.broughtBooks) user.broughtBooks = [];
-      if (!user.borrowedBooks) user.borrowedBooks = [];
-      if (!user.transactionHistory) user.transactionHistory = [];
-      this.cart.forEach(item => {
-        const bookData = {
-          ...item,
-          userId: this.userId,
-        };
+      const processedBooks = [...this.cart]; // Store cart for order modal
+
+      // Prepare data for API and localStorage
+      const newBooks = [];
+      const newTransactions = [];
+      this.cart.forEach((item) => {
+        const bookData = { ...item, userId: this.userId };
         if (item.action === 'buy') {
-          user.broughtBooks.push(bookData);
-          user.transactionHistory.push({
-            ...bookData,
-            type: 'buy',
-            date: now,
-            reference: response.reference
-          });
+          newBooks.push({ ...bookData, type: 'broughtBook' });
+          newTransactions.push({ ...bookData, type: 'transaction', date: now, reference: response.reference });
         } else if (item.action === 'borrow') {
-          user.borrowedBooks.push(bookData);
-          user.transactionHistory.push({
-            ...bookData,
-            type: 'borrow',
-            date: now,
-            reference: response.reference
-          });
+          newBooks.push({ ...bookData, type: 'borrowedBook', rentalDate: now });
+          newTransactions.push({ ...bookData, type: 'transaction', date: now, reference: response.reference });
         }
       });
-      // Save updated user to API
+
+      // Save to API incrementally
+      let apiSuccess = true;
       try {
-        await mockstorage.updateUser(this.userId, user);
-      } catch (e) {
-        this.loading = false;
-        this.showFeedback('Failed to save to server. Please try again.');
-        return;
+        await mockstorage.updateUser(this.userId, {
+          id: this.userId,
+          email: this.userEmail,
+          lastUpdated: now,
+        });
+        for (const book of newBooks) {
+          try {
+            await mockstorage.addBook({ ...book, userId: this.userId });
+          } catch (error) {
+            console.error(`Error saving book for user ${this.userId}:`, error);
+            apiSuccess = false;
+          }
+        }
+        for (const transaction of newTransactions) {
+          try {
+            if (typeof mockstorage.addTransaction === 'function') {
+              await mockstorage.addTransaction({ ...transaction, userId: this.userId });
+            } else {
+              console.warn('addTransaction not found, using axios fallback');
+              await axios.post('https://683efaf01cd60dca33ddd10d.mockapi.io/users', {
+                ...transaction,
+                userId: this.userId,
+                type: 'transaction',
+              });
+            }
+          } catch (error) {
+            console.error(`Error saving transaction for user ${this.userId}:`, error);
+            apiSuccess = false;
+          }
+        }
+      } catch (error) {
+        console.error(`Error updating API for user ${this.userId}:`, error);
+        apiSuccess = false;
       }
-      // Optionally: Save to localStorage (per user, if needed)
-      localStorage.setItem(`broughtBooks_${this.userId}`, JSON.stringify(user.broughtBooks));
-      localStorage.setItem(`borrowedBooks_${this.userId}`, JSON.stringify(user.borrowedBooks));
-      localStorage.setItem(`transactionHistory_${this.userId}`, JSON.stringify(user.transactionHistory));
+
+      // Update localStorage
+      const broughtBooks = JSON.parse(localStorage.getItem(`broughtBooks_${this.userId}`) || '[]');
+      const borrowedBooks = JSON.parse(localStorage.getItem(`borrowedBooks_${this.userId}`) || '[]');
+      let transactionHistory = JSON.parse(localStorage.getItem(`transactionHistory_${this.userId}`) || '[]');
+      broughtBooks.push(...newBooks.filter(b => b.type === 'broughtBook'));
+      borrowedBooks.push(...newBooks.filter(b => b.type === 'borrowedBook'));
+      transactionHistory = [...transactionHistory, ...newTransactions];
+
+      localStorage.setItem(`broughtBooks_${this.userId}`, JSON.stringify(broughtBooks));
+      localStorage.setItem(`borrowedBooks_${this.userId}`, JSON.stringify(borrowedBooks));
+      localStorage.setItem(`transactionHistory_${this.userId}`, JSON.stringify(transactionHistory));
+
       // Clear cart
       localStorage.removeItem('cart');
       this.cart = [];
       window.dispatchEvent(new CustomEvent('cart-updated', { detail: 0 }));
+
+      // Show order confirmation
       this.loading = false;
-      this.showFeedback('Payment complete! Reference: ' + response.reference);
-      this.$router('/profile')
-    }
-  }
+      this.orderBooks = processedBooks;
+      this.orderDate = now;
+      this.orderReference = response.reference;
+      this.showOrderModal = true;
+      if (!apiSuccess) {
+        this.showFeedback('Some data saved locally due to API issues.');
+      }
+    },
+    handlePaymentSuccess(response) {
+      this.processPaymentSuccess(response);
+    },
+    checkoutDirect() {
+      if (!this.userId) {
+        this.showFeedback('Please log in to proceed with checkout.');
+        return;
+      }
+      if (!this.userEmail) {
+        this.showFeedback('User email not found. Please log in again.');
+        return;
+      }
+      if (!window.PaystackPop) {
+        this.showFeedback('Payment system not loaded. Please check your internet connection.');
+        return;
+      }
+      if (typeof this.handlePaymentSuccess !== 'function') {
+        this.showFeedback('Payment setup failed. Please try again.');
+        return;
+      }
+      const handler = window.PaystackPop.setup({
+        key: 'pk_test_055ff01887157684e74ac380a88d95b89ad6192f',
+        email: this.userEmail,
+        amount: this.totalPrice * 100,
+        currency: 'NGN',
+        ref: `${Math.floor(Math.random() * 1000000000 + 1)}`,
+        callback: this.handlePaymentSuccess.bind(this),
+        onClose: () => this.showFeedback('Payment window closed.'),
+      });
+      handler.openIframe();
+    },
+  },
 };
 </script>
+
+<style scoped>
+.cart-img {
+  width: 70px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.list-group-item {
+  display: flex;
+  align-items: center;
+}
+</style>

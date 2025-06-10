@@ -64,6 +64,7 @@
     </section>
 
     <!-- Featured Books Carousel Section -->
+   
 
     <!-- Features Section -->
     <section class="features" id="features" style="margin: 40px 0px">
@@ -198,7 +199,6 @@ export default {
 
 <style scoped>
 .christian-books-app {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
   color: #333;
   overflow-x: hidden;
