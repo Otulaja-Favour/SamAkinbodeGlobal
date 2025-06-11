@@ -124,7 +124,6 @@
                     <span class="badge bg-info">Return in: {{ getCountdown(book.id) }}</span>
                   </div>
                   <div class="d-flex align-items-center mt-2 gap-2">
-                    <!-- Read button triggers viewBook, showing PDF in reading-section -->
                     <button class="btn btn-outline-primary btn-sm" @click="viewBook(book)">
                       <i class="fas fa-eye"></i> Read
                     </button>
@@ -226,7 +225,6 @@
 
         <!-- Settings -->
         <div v-else-if="dashboardTab === 'settings'">
-        
           <h4>Settings</h4>
           <form @submit.prevent="saveSettings" class="mt-3" style="max-width:400px;">
             <div class="mb-3">
@@ -383,15 +381,18 @@ export default {
       this.rentedBooks.forEach((book, idx) => {
         if (book.rentalDate) {
           this.scheduleAutoReturn(book, idx);
-          this.startCountdown(book.id);
         } else {
-          console.warn(`No rentalDate for book ${book.id}`);
+          // If rentalDate is missing, set it to now and update storage
+          book.rentalDate = new Date().toISOString();
+          this.updateRentalDate(book, idx);
+          this.scheduleAutoReturn(book, idx);
         }
       });
       toast.success("Profile data loaded successfully!");
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to fetch data. Using local data.");
+      const userId = localStorage.getItem("userId");
       this.ownedBooks = JSON.parse(localStorage.getItem(`broughtBooks_${userId}`) || "[]");
       this.rentedBooks = JSON.parse(localStorage.getItem(`borrowedBooks_${userId}`) || "[]");
       this.transactionHistory = JSON.parse(localStorage.getItem(`transactionHistory_${userId}`) || "[]");
@@ -401,7 +402,10 @@ export default {
       this.rentedBooks.forEach((book, idx) => {
         if (book.rentalDate) {
           this.scheduleAutoReturn(book, idx);
-          this.startCountdown(book.id);
+        } else {
+          book.rentalDate = new Date().toISOString();
+          this.updateRentalDate(book, idx);
+          this.scheduleAutoReturn(book, idx);
         }
       });
     }
@@ -423,7 +427,6 @@ export default {
       }
     },
     viewBook(book) {
-      // Handles viewing both owned and rented books
       this.selectedBook = book;
       this.readBooks.add(book.id);
       localStorage.setItem(`readBooks_${this.user.id}`, JSON.stringify([...this.readBooks]));
@@ -446,7 +449,6 @@ export default {
       document.body.removeChild(link);
       toast.success(`Downloading ${book.title}`);
     },
-    
     showCommentModal(book, idx, type) {
       this.currentBook = { ...book };
       this.currentBookIdx = idx;
@@ -491,11 +493,11 @@ export default {
     },
     async returnRentedBook(bookId, idx) {
       try {
-        await mockstorage.returnBorrowedBook(bookId);
+        await mockstorage.returnBorrowedBook(bookId, this.user.id);
         this.rentedBooks.splice(idx, 1);
         localStorage.setItem(`borrowedBooks_${this.user.id}`, JSON.stringify(this.rentedBooks));
-        clearInterval(this.countdownTimers[bookId]);
-        delete this.countdownTimers[bookId];
+        clearInterval(this.countdownTimers[`interval_${bookId}`]);
+        delete this.countdownTimers[`interval_${bookId}`];
         delete this.countdownDisplays[bookId];
         toast.success("Book returned successfully!");
       } catch (error) {
@@ -512,7 +514,7 @@ export default {
           date: new Date().toLocaleString(),
           type: "appointment"
         };
-        await mockstorage.saveAppointment(newApp);
+        await mockstorage.saveAppointment(this.user.id, newApp);
         this.appointments.push(newApp);
         localStorage.setItem(`appointments_${this.user.id}`, JSON.stringify(this.appointments));
         toast.success("Appointment created successfully!");
@@ -525,56 +527,71 @@ export default {
         this.appointmentLoading = false;
       }
     },
+    // Ensure rentalDate is set and update storage
+    async updateRentalDate(book, idx) {
+      book.rentalDate = new Date().toISOString();
+      this.rentedBooks[idx] = { ...book };
+      await mockstorage.saveBorrowedBooks(this.user.id, [book]);
+      localStorage.setItem(`borrowedBooks_${this.user.id}`, JSON.stringify(this.rentedBooks));
+    },
+    // Schedules auto-return and timer for a rented book (2 weeks)
     scheduleAutoReturn(book, idx) {
       if (!book.rentalDate) {
-        console.warn(`No rentalDate for book ${book.id}`);
-        return;
+        book.rentalDate = new Date().toISOString();
+        this.updateRentalDate(book, idx);
       }
       const rentalDate = new Date(book.rentalDate);
-      const returnDate = new Date(rentalDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const returnDate = new Date(rentalDate.getTime() + 14 * 24 * 60 * 60 * 1000); // 2 weeks
       const now = new Date();
       const timeUntilReturn = returnDate.getTime() - now.getTime();
 
-      if (timeUntilReturn <= 0) {
-        this.returnRentedBook(book.id, idx);
-        return;
+      // Only schedule auto-return if time is in the future
+      if (timeUntilReturn > 0) {
+        if (this.countdownTimers[book.id]) clearTimeout(this.countdownTimers[book.id]);
+        this.countdownTimers[book.id] = setTimeout(() => {
+          const idxNow = this.rentedBooks.findIndex(b => b.id === book.id);
+          if (idxNow !== -1) {
+            this.returnRentedBook(book.id, idxNow);
+            toast.info(`Book "${book.title}" auto-returned after 2 weeks`);
+          }
+        }, timeUntilReturn);
       }
-
-      setTimeout(() => {
-        this.returnRentedBook(book.id, idx);
-        toast.info(`Book ${book.title} auto-returned after 30 days`);
-      }, timeUntilReturn);
+      // Always start the countdown display
+      this.startCountdown(book.id);
     },
+    // Start countdown timer for a rented book
     startCountdown(bookId) {
-      this.countdownDisplays[bookId] = "";
-      this.countdownTimers[bookId] = setInterval(() => {
+      if (this.countdownTimers[`interval_${bookId}`]) clearInterval(this.countdownTimers[`interval_${bookId}`]);
+      this.countdownTimers[`interval_${bookId}`] = setInterval(() => {
         this.updateCountdown(bookId);
       }, 1000);
       this.updateCountdown(bookId);
     },
+    // Update countdown display for a rented book
     updateCountdown(bookId) {
       const book = this.rentedBooks.find(b => b.id === bookId);
       if (!book || !book.rentalDate) {
-        clearInterval(this.countdownTimers[bookId]);
-        delete this.countdownTimers[bookId];
-        delete this.countdownDisplays[bookId];
+        clearInterval(this.countdownTimers[`interval_${bookId}`]);
+        delete this.countdownTimers[`interval_${bookId}`];
+        this.countdownDisplays[bookId] = "No timer";
         return;
       }
-
       const rentalDate = new Date(book.rentalDate);
-      const returnDate = new Date(rentalDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const returnDate = new Date(rentalDate.getTime() + 14 * 24 * 60 * 60 * 1000); // 2 weeks
       const now = new Date();
       const timeLeft = returnDate.getTime() - now.getTime();
 
       if (timeLeft <= 0) {
-        this.countdownDisplays[bookId] = "Overdue";
+        this.countdownDisplays[bookId] = "Time's up!";
+        clearInterval(this.countdownTimers[`interval_${bookId}`]);
+        delete this.countdownTimers[`interval_${bookId}`];
         return;
       }
 
       const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24))) / (1000 * 60 * 60);
-      const minutes = Math.floor((timeLeft % (1000 * 60 * 60))) / (1000 * (60));
-      const seconds = Math.floor((timeLeft % (1000 * (60))) / 1000);
+      const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
       this.countdownDisplays[bookId] = `${days}d ${hours}h ${minutes}m ${seconds}s`;
     },
     getCountdown(bookId) {
@@ -586,6 +603,7 @@ export default {
   }
 };
 </script>
+
 
 <style scoped>
 .conc {
