@@ -226,6 +226,7 @@
 
         <!-- Settings -->
         <div v-else-if="dashboardTab === 'settings'">
+        
           <h4>Settings</h4>
           <form @submit.prevent="saveSettings" class="mt-3" style="max-width:400px;">
             <div class="mb-3">
@@ -259,7 +260,7 @@
           <div class="mt-4">
             <h6>Your Comments:</h6>
             <div v-if="userComments.length === 0" class="alert alert-info">No comments yet.</div>
-            <ul class="list-group" v-else>
+            <ul class="list-group" style="height: 160px; overflow-y: scroll;" v-else>
               <li class="list-group-item" v-for="(comment, idx) in userComments" :key="idx">
                 <strong>{{ comment.bookTitle }}</strong>: {{ comment.comment }}
               </li>
@@ -646,6 +647,7 @@ export default {
   position: fixed;
   z-index: 1000;
   top: 0;
+  height: 100vh;
   left: 0;
   right: 0;
   bottom: rgba(0, 0, 0, 0.4);
@@ -675,10 +677,11 @@ export default {
 }
 .reading-section {
   position: fixed;
-  top: 50px;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
   width: 70vw;
+  height: 90vh;
   background: #f8f9fa;
   border: 1px solid #dee2e6;
   border-radius: 8px;
@@ -688,7 +691,7 @@ export default {
 }
 .book-iframe {
   width: 100%;
-  height: 80vh;
+  height: 76vh;
   border: none;
   border-radius: 4px;
   overflow-y: scroll;

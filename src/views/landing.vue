@@ -30,12 +30,11 @@
               <li class="nav-item">
                 <a class="nav-link" href="#features">Features</a>
               </li>
-            
               <li class="nav-item">
                 <a class="nav-link" href="#contact">Contact</a>
               </li>
               <li class="nav-item">
-                <button class="btn cta-button" @click="createAccount" :disabled="isCreatingAccount">
+                <button class="btn cta-button bounce" @click="createAccount" :disabled="isCreatingAccount">
                   {{ isCreatingAccount ? 'Creating...' : 'Create Account' }}
                 </button>
               </li>
@@ -50,44 +49,41 @@
       <div class="floating-circle circle-1"></div>
       <div class="floating-circle circle-2"></div>
       <div class="container hero-container text-center">
-        <h1 class="hero-title">Christian Books Library</h1>
-        <p class="hero-subtitle">Discover Faith. Grow Spiritually.</p>
+        <h1 class="hero-title typing">Christian Books Library</h1>
+        <p class="hero-subtitle typing">Discover Faith. Grow Spiritually.</p>
         <div class="hero-buttons d-flex justify-content-center gap-3 flex-wrap">
-          <button class="btn btn-light btn-lg" @click="createAccount" :disabled="isCreatingAccount" style="border-radius: 30px;">
+          <button class="btn btn-light btn-lg bounce" @click="createAccount" :disabled="isCreatingAccount">
             {{ isCreatingAccount ? 'Creating...' : 'Start Reading' }}
           </button>
-          <button class="btn btn-outline-light btn-lg"  style="border-radius: 30px;">
-           <a href="#features" style="text-decoration: none; color: black;"> Learn More</a>
+          <button class="btn btn-outline-light btn-lg bounce">
+            <a href="#features" class="learn-more">Learn More</a>
           </button>
         </div>
       </div>
     </section>
 
-    <!-- Featured Books Carousel Section -->
-   
-
     <!-- Features Section -->
-    <section class="features" id="features" style="margin: 40px 0px">
+    <section class="features animate-section" id="features">
       <div class="container-fluid my-4">
         <h1 class="section-title text-center">Simple & Powerful</h1>
-        <div class="features-grid" style="display: flex; flex-wrap: wrap; flex-direction: row">
+        <div class="features-grid">
           <div class="feature-card">
-            <span class="feature-icon">📚</span>
+            <span class="feature-icon bounce">📚</span>
             <h3>Christian Books</h3>
             <p>Vast collection of Christian literature and educational materials.</p>
           </div>
           <div class="feature-card">
-            <span class="feature-icon">🔍</span>
+            <span class="feature-icon bounce">🔍</span>
             <h3>Easy Search</h3>
             <p>Find books by topic, author, or spiritual theme instantly.</p>
           </div>
           <div class="feature-card">
-            <span class="feature-icon">⛪</span>
+            <span class="feature-icon bounce">⛪</span>
             <h3>Church Library</h3>
             <p>Perfect for churches, schools, and ministry organizations.</p>
           </div>
           <div class="feature-card">
-            <span class="feature-icon">📱</span>
+            <span class="feature-icon bounce">📱</span>
             <h3>Mobile Ready</h3>
             <p>Access your library anywhere, anytime on any device.</p>
           </div>
@@ -96,20 +92,20 @@
     </section>
 
     <!-- Stats Section -->
-    <section class="stats">
+    <section class="stats animate-section">
       <div class="container">
-        <h2 class="section-title" style="color: white">Growing Together</h2>
-        <div class="stats-grid my-4" style="display: flex; justify-content: center">
+        <h2 class="section-title">Growing Together</h2>
+        <div class="stats-grid">
           <div class="stat-item">
-            <h3>10K+</h3>
+            <h3 class="pulse">10K+</h3>
             <p>Christian Books</p>
           </div>
           <div class="stat-item">
-            <h3>500+</h3>
+            <h3 class="pulse">500+</h3>
             <p>Churches</p>
           </div>
           <div class="stat-item">
-            <h3>50K+</h3>
+            <h3 class="pulse">50K+</h3>
             <p>Happy Readers</p>
           </div>
         </div>
@@ -117,24 +113,19 @@
     </section>
 
     <!-- CTA Section -->
-    <section class="cta-section" id="contact">
+    <section class="cta-section animate-section" id="contact">
       <div class="container cta-container text-center">
         <h2>Ready to Start?</h2>
         <p>Join thousands of Christians growing in faith through reading.</p>
-        <button class="btn cta-final-button" @click="createAccount" :disabled="isCreatingAccount">
+        <button class="btn cta-final-button pulse" @click="createAccount" :disabled="isCreatingAccount">
           {{ isCreatingAccount ? 'Creating...' : 'Create Account Now' }}
         </button>
       </div>
+      <contact />
     </section>
-<!-- <div class="ctasec"> -->
-  <contact />
-<!-- </div> -->
 
     <!-- Footer -->
-    <footer
-      class="text-white text-center mt-5"
-      style="background-color: #1e3a8a; padding: 40px 0px"
-    >
+    <footer class="text-white text-center">
       <div class="container">
         <p class="mb-0">© 2025 Library Management System. All rights reserved.</p>
       </div>
@@ -143,38 +134,39 @@
 </template>
 
 <script>
-import { toast } from 'vue3-toastify'
-import contact from '@/components/contact.vue'
+import { toast } from 'vue3-toastify';
+import contact from '@/components/contact.vue';
 
 export default {
-  components:{contact},
-  // name: 'BookVault',
+  components: { contact },
   data() {
     return {
       isCreatingAccount: false,
-    }
+      floatingBooksInterval: null,
+    };
   },
-
   mounted() {
-    this.startFloatingBooksAnimation()
+    this.startFloatingBooksAnimation();
+    this.observeSections();
   },
   beforeUnmount() {
-    if (this.floatingBooksInterval) clearInterval(this.floatingBooksInterval)
+    if (this.floatingBooksInterval) clearInterval(this.floatingBooksInterval);
   },
   methods: {
     createAccount() {
-      this.isCreatingAccount = true
-      toast.success('Proceeding . . .')
+      this.isCreatingAccount = true;
+      toast.success('Proceeding . . .');
       setTimeout(() => {
-        this.$router.push('/auth')
-        this.isCreatingAccount = false
-      }, 1500)
+        this.$router.push('/auth');
+        this.isCreatingAccount = false;
+      }, 1500);
     },
     startFloatingBooksAnimation() {
       this.floatingBooksInterval = setInterval(() => {
-        const book = document.createElement('div')
-        const icons = ['📖', '📚', '📜', '✝']
-        book.innerHTML = icons[Math.floor(Math.random() * 4)]
+        const book = document.createElement('div');
+        const icons = ['📖', '📚', '📜', '✝'];
+        book.innerHTML = icons[Math.floor(Math.random() * 4)];
+        book.className = 'dynamic-book';
         book.style.cssText = `
           position: fixed;
           left: ${Math.random() * 100}%;
@@ -183,18 +175,32 @@ export default {
           opacity: 0.1;
           z-index: -1;
           pointer-events: none;
-          transition: all 8s linear;
-        `
-        document.body.appendChild(book)
+        `;
+        document.body.appendChild(book);
         setTimeout(() => {
-          book.style.top = '-100px'
-          book.style.transform = 'rotate(360deg)'
-        }, 100)
-        setTimeout(() => book.remove(), 8000)
-      }, 3000)
+          book.style.top = '-100px';
+          book.style.transform = 'rotate(360deg) scale(1.2)';
+          book.style.opacity = '0.3';
+        }, 100);
+        setTimeout(() => book.remove(), 8000);
+      }, 3000);
+    },
+    observeSections() {
+      const sections = document.querySelectorAll('.animate-section');
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+            }
+          });
+        },
+        { threshold: 0.2 }
+      );
+      sections.forEach((section) => observer.observe(section));
     },
   },
-}
+};
 </script>
 
 <style scoped>
@@ -202,159 +208,10 @@ export default {
   line-height: 1.6;
   color: #333;
   overflow-x: hidden;
-}
-
-.feature-card {
-  background: white;
-  padding: 3rem 2rem;
-  border-radius: 20px;
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  transition: all 0.5s ease;
-  transform: translateY(50px);
-  opacity: 0;
-  animation: fadeInUp 0.8s ease forwards;
-  width: 30%;
-  margin: 15px;
-}
-
-.stats {
-  padding: 100px 0;
-  background: linear-gradient(135deg, #1e3a8a, #7c3aed);
-  color: white;
-  text-align: center;
   position: relative;
-  overflow: hidden;
 }
 
-.stats::before {
-  content: '';
-  position: absolute;
-  width: 300px;
-  height: 300px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 50%;
-  top: -150px;
-  right: -150px;
-  animation: float 10s ease-in-out infinite;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 3rem;
-  margin-top: 4rem;
-  position: relative;
-  z-index: 2;
-}
-
-.cta-section {
-  padding: 100px 0;
-  background: #f8f9fa;
-  text-align: center;
-}
-
-.cta-content {
-  animation: fadeInUp 1s ease;
-}
-
-.cta-content h2 {
-  font-size: 3rem;
-  margin-bottom: 2rem;
-  color: #333;
-}
-
-.cta-content p {
-  font-size: 1.3rem;
-  color: #666;
-  margin-bottom: 3rem;
-}
-
-.cta-final-button {
-  background: linear-gradient(45deg, #1e3a8a, #7c3aed);
-  color: white;
-  padding: 20px 50px;
-  border: none;
-  border-radius: 30px;
-  font-size: 1.3rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-block;
-  animation: glow 2s infinite;
-}
-
-.cta-final-button:hover {
-  transform: translateY(-5px) scale(1.1);
-  box-shadow: 0 20px 50px rgba(30, 58, 138, 0.4);
-}
-
-.feature-card:nth-child(1) {
-  animation-delay: 0.2s;
-}
-.feature-card:nth-child(2) {
-  animation-delay: 0.4s;
-}
-.feature-card:nth-child(3) {
-  animation-delay: 0.6s;
-}
-.feature-card:nth-child(4) {
-  animation-delay: 0.8s;
-}
-
-.feature-card:hover {
-  transform: translateY(-20px) scale(1.05);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
-}
-
-/* Animations */
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@keyframes bookFlip {
-  0% {
-    transform: rotateY(0deg);
-  }
-  50% {
-    transform: rotateY(-15deg);
-  }
-  100% {
-    transform: rotateY(0deg);
-  }
-}
-
-/* Floating Books Background */
+/* Floating Books */
 .floating-books {
   position: fixed;
   top: 0;
@@ -364,29 +221,15 @@ export default {
   pointer-events: none;
   z-index: -1;
 }
-
-.book {
+.book, .dynamic-book {
   position: absolute;
   font-size: 1.5rem;
   opacity: 0.1;
-  animation: float 15s ease-in-out infinite;
+  animation: float-book 15s ease-in-out infinite;
 }
-
-.book-1 {
-  top: 20%;
-  left: 10%;
-  animation-delay: 0s;
-}
-.book-2 {
-  top: 60%;
-  right: 20%;
-  animation-delay: 5s;
-}
-.book-3 {
-  bottom: 30%;
-  left: 30%;
-  animation-delay: 10s;
-}
+.book-1 { top: 20%; left: 10%; animation-delay: 0s; }
+.book-2 { top: 60%; right: 20%; animation-delay: 5s; }
+.book-3 { bottom: 30%; left: 30%; animation-delay: 10s; }
 
 /* Header */
 .header {
@@ -397,19 +240,6 @@ export default {
   top: 0;
   z-index: 1000;
 }
-
-.nav-container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.feature-icon {
-  font-size: 4rem;
-  margin-bottom: 1.5rem;
-  display: block;
-  animation: bounce 2s infinite;
-}
-
 .logo {
   font-size: 1.5rem;
   font-weight: bold;
@@ -418,24 +248,17 @@ export default {
   align-items: center;
   gap: 10px;
 }
-
 .logo-icon {
   font-size: 1.8rem;
   animation: pulse 2s infinite;
 }
-
 .cta-button {
   background: linear-gradient(45deg, #1e3a8a, #7c3aed);
   color: white;
   border-radius: 25px;
   font-weight: 600;
-  transition: all 0.3s ease;
+  padding: 10px 20px;
 }
-
-.cta-button:hover:not(:disabled) {
-  transform: translateY(-3px) scale(1.05);
-}
-
 .cta-button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
@@ -443,104 +266,198 @@ export default {
 
 /* Hero Section */
 .hero {
-  padding: 250px 0 80px;
+  padding: 200px 0 80px;
   background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
   color: white;
   position: relative;
   overflow: hidden;
 }
-
 .floating-circle {
   position: absolute;
   border-radius: 50%;
+  animation: float-circle 6s ease-in-out infinite;
 }
-
 .circle-1 {
   width: 150px;
   height: 150px;
   background: rgba(255, 255, 255, 0.1);
   top: 20%;
   left: 10%;
-  animation: float 6s ease-in-out infinite;
 }
-
 .circle-2 {
   width: 100px;
   height: 100px;
   background: rgba(255, 255, 255, 0.05);
   bottom: 20%;
   right: 15%;
-  animation: float 8s ease-in-out infinite reverse;
+  animation-direction: reverse;
 }
-
-.circle-3 {
-  width: 200px;
-  height: 200px;
-  background: rgba(255, 255, 255, 0.05);
-  top: -100px;
-  right: -100px;
-  animation: float 10s ease-in-out infinite;
+.hero-title, .hero-subtitle {
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
 }
-
 .hero-title {
   font-size: 3rem;
+  
   font-weight: 700;
-  animation: fadeInUp 1s ease;
+  animation: typing 3s steps(30, end) forwards;
 }
-
+.hero-title::after, .hero-subtitle::after {
+  content: '|';
+  position: absolute;
+  right: 0;
+  animation: blink 0.7s infinite;
+}
 .hero-subtitle {
   font-size: 1.25rem;
-  animation: fadeInUp 1s ease 0.3s both;
+  animation: typing 2s steps(30, end) 3s forwards;
+}
+.hero-buttons .btn {
+  border-radius: 30px;
+  transition: transform 0.3s ease;
+}
+.learn-more {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Features Section */
+.features {
+  padding: 40px 0;
+}
+.features-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+.feature-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  width: 30%;
+  min-width: 250px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.feature-card:hover {
+  transform: translateY(-10px) scale(1.05);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+}
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+/* Stats Section */
+.stats {
+  padding: 80px 0;
+  background: linear-gradient(135deg, #1e3a8a, #7c3aed);
+  color: white;
+  text-align: center;
+}
+.stats-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 2rem;
 }
 .stat-item {
-  animation: fadeInUp 1s ease;
   width: 30%;
+  min-width: 200px;
 }
-
-.stat-item:nth-child(1) {
-  animation-delay: 0.2s;
-}
-.stat-item:nth-child(2) {
-  animation-delay: 0.4s;
-}
-.stat-item:nth-child(3) {
-  animation-delay: 0.6s;
-}
-
 .stat-item h3 {
-  font-size: 4rem;
-  margin-bottom: 1rem;
+  font-size: 3rem;
   font-weight: 700;
-  animation: pulse 2s infinite;
 }
 
-.stat-item p {
-  font-size: 1.3rem;
+/* CTA Section */
+.cta-section {
+  padding: 80px 0;
+  background: #f8f9fa;
+  text-align: center;
 }
-.ctasec{
-  display: flex;
+.cta-final-button {
+  background: linear-gradient(45deg, #1e3a8a, #7c3aed);
+  color: white;
+  padding: 15px 40px;
+  border-radius: 30px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  border: none;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.cta-final-button:hover:not(:disabled) {
+  transform: translateY(-5px) scale(1.1);
+  box-shadow: 0 10px 30px rgba(30, 58, 138, 0.4);
+}
+.cta-final-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 /* Footer */
+footer {
+  background-color: #1e3a8a;
+  padding: 40px 0;
+}
 
-/* Responsive Adjustments */
+/* Animations */
+@keyframes float-book {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-30px) rotate(15deg); }
+}
+@keyframes float-circle {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.1); }
+}
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  60% { transform: translateY(-5px); }
+}
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.bounce:hover:not(:disabled) {
+  animation: bounce 0.6s ease;
+}
+.pulse {
+  animation: pulse 2s infinite;
+}
+.animate-section {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.animate-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Responsive */
 @media (max-width: 900px) {
-  .hero-title {
-    font-size: 2rem;
-  }
-  .hero-subtitle {
-    font-size: 1rem;
-  }
-  .feature-card {
-    width: 100%;
-  }
-  .stats-grid {
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
-  .ctasec{
-    flex-direction: column;
-  }
+  .hero { padding: 150px 0 60px; }
+  .hero-title { font-size: 25px; padding: 0px 0px; }
+  .hero-subtitle { font-size: 1rem; }
+  .features-grid, .stats-grid { flex-direction: column; align-items: center; }
+  .feature-card, .stat-item { width: 100%; max-width: 350px; }
+  .cta-final-button { padding: 12px 30px; font-size: 1rem; }
 }
 </style>
