@@ -3,8 +3,12 @@ import axios from 'axios';
 const API_URL = 'https://683efaf01cd60dca33ddd10d.mockapi.io/users';
 const LOCAL_KEY = 'users_data';
 
+function getUserKey(type, userId) {
+  return` ${type}_${userId}`;
+}
+
 export default {
-  // Fetch all users, with localStorage fallback if API fails or times out after 5s
+  // Fetch all users (admin only)
   async fetchUsers() {
     try {
       const response = await Promise.race([
@@ -15,14 +19,12 @@ export default {
       return response.data;
     } catch (err) {
       const local = localStorage.getItem(LOCAL_KEY);
-      if (local) {
-        return JSON.parse(local);
-      }
+      if (local) return JSON.parse(local);
       return [];
     }
   },
 
-  // Fetch a single user by ID, with localStorage fallback
+  // Fetch a single user by ID
   async fetchUser(id) {
     if (!id) return null;
     try {
@@ -41,110 +43,106 @@ export default {
     }
   },
 
-  // Create a new user and update localStorage
+  // Create a new user
   async createUser(userData) {
     const response = await axios.post(API_URL, userData);
     let users = [];
-    try {
-      users = await this.fetchUsers();
-    } catch {}
+    try { users = await this.fetchUsers(); } catch {}
     users.push(response.data);
     localStorage.setItem(LOCAL_KEY, JSON.stringify(users));
     return response.data;
   },
 
-  // Update a user by ID and update localStorage
+  // Update a user
   async updateUser(id, userData) {
     const response = await axios.put(`${API_URL}/${id}`, userData);
     let users = [];
-    try {
-      users = await this.fetchUsers();
-    } catch {}
+    try { users = await this.fetchUsers(); } catch {}
     users = users.map(u => (u.id == id ? response.data : u));
     localStorage.setItem(LOCAL_KEY, JSON.stringify(users));
     return response.data;
   },
 
-  // Delete a user by ID and update localStorage
+  // Delete a user
   async deleteUser(id) {
     const response = await axios.delete(`${API_URL}/${id}`);
     let users = [];
-    try {
-      users = await this.fetchUsers();
-    } catch {}
+    try { users = await this.fetchUsers(); } catch {}
     users = users.filter(u => u.id != id);
     localStorage.setItem(LOCAL_KEY, JSON.stringify(users));
     return response.data;
   },
 
-  // Save brought books (buy)
-  async saveBroughtBooks(books) {
-    if (!Array.isArray(books) || books.length === 0) return;
+  // Save brought books for a user
+  async saveBroughtBooks(userId, books) {
+    if (!userId || !Array.isArray(books)) return;
     for (const book of books) {
-      const userData = { ...book, type: 'broughtBook' };
+      const userData = { ...book, userId, type: 'broughtBook' };
       await axios.post(API_URL, userData);
     }
-    let local = JSON.parse(localStorage.getItem('broughtBooks') || '[]');
+    let local = JSON.parse(localStorage.getItem(getUserKey('broughtBooks', userId)) || '[]');
     local = local.concat(books);
-    localStorage.setItem('broughtBooks', JSON.stringify(local));
+    localStorage.setItem(getUserKey('broughtBooks', userId), JSON.stringify(local));
   },
 
-  // Save borrowed books (rent)
-  async saveBorrowedBooks(books) {
-    if (!Array.isArray(books) || books.length === 0) return;
+  // Save borrowed books for a user
+  async saveBorrowedBooks(userId, books) {
+    if (!userId || !Array.isArray(books)) return;
     for (const book of books) {
-      const userData = { ...book, type: 'borrowedBook' };
+      const userData = { ...book, userId, type: 'borrowedBook' };
       await axios.post(API_URL, userData);
     }
-    let local = JSON.parse(localStorage.getItem('borrowedBooks') || '[]');
+    let local = JSON.parse(localStorage.getItem(getUserKey('borrowedBooks', userId)) || '[]');
     local = local.concat(books);
-    localStorage.setItem('borrowedBooks', JSON.stringify(local));
+    localStorage.setItem(getUserKey('borrowedBooks', userId), JSON.stringify(local));
   },
 
-  // Save transaction history
-  async saveTransactionHistory(transactions) {
-    if (!Array.isArray(transactions) || transactions.length === 0) return;
+  // Save transaction history for a user
+  async saveTransactionHistory(userId, transactions) {
+    if (!userId || !Array.isArray(transactions)) return;
     for (const tx of transactions) {
-      const txData = { ...tx, type: 'transaction' };
+      const txData = { ...tx, userId, type: 'transaction' };
       await axios.post(API_URL, txData);
     }
-    let local = JSON.parse(localStorage.getItem('transactionHistory') || '[]');
+    let local = JSON.parse(localStorage.getItem(getUserKey('transactionHistory', userId)) || '[]');
     local = local.concat(transactions);
-    localStorage.setItem('transactionHistory', JSON.stringify(local));
+    localStorage.setItem(getUserKey('transactionHistory', userId), JSON.stringify(local));
   },
 
-  // Fetch brought books (buy)
-  async fetchBroughtBooks() {
+  // Fetch brought books for a user
+  async fetchBroughtBooks(userId) {
+    if (!userId) return [];
     try {
       const users = await this.fetchUsers();
-      return users.filter(u => u.type === 'broughtBook');
+      return users.filter(u => u.type === 'broughtBook' && u.userId == userId);
     } catch {
-      return JSON.parse(localStorage.getItem('broughtBooks') || '[]');
+      return JSON.parse(localStorage.getItem(getUserKey('broughtBooks', userId)) || '[]');
     }
   },
 
-  // Fetch borrowed books (rent)
-  async fetchBorrowedBooks() {
+  // Fetch borrowed books for a user
+  async fetchBorrowedBooks(userId) {
+    if (!userId) return [];
     try {
       const users = await this.fetchUsers();
-      return users.filter(u => u.type === 'borrowedBook');
+      return users.filter(u => u.type === 'borrowedBook' && u.userId == userId);
     } catch {
-      return JSON.parse(localStorage.getItem('borrowedBooks') || '[]');
+      return JSON.parse(localStorage.getItem(getUserKey('borrowedBooks', userId)) || '[]');
     }
   },
 
-  // Fetch transaction history
-  async fetchTransactionHistory() {
+  // Fetch transaction history for a user
+  async fetchTransactionHistory(userId) {
+    if (!userId) return [];
     try {
       const users = await this.fetchUsers();
-      return users.filter(u => u.type === 'transaction');
+      return users.filter(u => u.type === 'transaction' && u.userId == userId);
     } catch {
-      return JSON.parse(localStorage.getItem('transactionHistory') || '[]');
+      return JSON.parse(localStorage.getItem(getUserKey('transactionHistory', userId)) || '[]');
     }
   },
-  
 
-  // Save a comment to a book (by id)
+  // Save a comment to a book (by id, for a user)
   async saveBookComment(bookId, comments) {
     if (!bookId) return;
     const users = await this.fetchUsers();
@@ -155,37 +153,37 @@ export default {
     }
   },
 
-  // Return a borrowed book (delete from API)
-  async returnBorrowedBook(bookId) {
-    if (!bookId) return;
+  // Return a borrowed book (delete from API and localStorage for user)
+  async returnBorrowedBook(bookId, userId) {
+    if (!bookId || !userId) return;
     await this.deleteUser(bookId);
-    // Optionally update localStorage
-    let local = JSON.parse(localStorage.getItem('borrowedBooks') || '[]');
+    let local = JSON.parse(localStorage.getItem(getUserKey('borrowedBooks', userId)) || '[]');
     local = local.filter(b => b.id != bookId);
-    localStorage.setItem('borrowedBooks', JSON.stringify(local));
+    localStorage.setItem(getUserKey('borrowedBooks', userId), JSON.stringify(local));
   },
 
-  // Appointments
-  async fetchAppointments() {
+  // Appointments for a user
+  async fetchAppointments(userId) {
+    if (!userId) return [];
     try {
       const users = await this.fetchUsers();
-      return users.filter(u => u.type === 'appointment');
+      return users.filter(u => u.type === 'appointment' && u.userId == userId);
     } catch {
-      return JSON.parse(localStorage.getItem('appointments') || '[]');
+      return JSON.parse(localStorage.getItem(getUserKey('appointments', userId)) || '[]');
     }
   },
-  async saveAppointment(appointment) {
-    const data = { ...appointment, type: 'appointment' };
+  async saveAppointment(userId, appointment) {
+    if (!userId) return;
+    const data = { ...appointment, userId, type: 'appointment' };
     await axios.post(API_URL, data);
-    let local = JSON.parse(localStorage.getItem('appointments') || '[]');
+    let local = JSON.parse(localStorage.getItem(getUserKey('appointments', userId)) || '[]');
     local.push(data);
-    localStorage.setItem('appointments', JSON.stringify(local));
+    localStorage.setItem(getUserKey('appointments', userId), JSON.stringify(local));
   },
 
   // Save user details
   async saveUser(user) {
     if (!user.id) {
-      // If no id, create new
       return await this.createUser(user);
     } else {
       return await this.updateUser(user.id, user);
@@ -194,55 +192,76 @@ export default {
 
   // ----------- ADMIN DASHBOARD FETCHERS -----------
 
-  // Fetch all books (for admin)
   async fetchAllBooks() {
     try {
       const users = await this.fetchUsers();
-      // Books are those with type 'broughtBook' or 'borrowedBook'
       return users.filter(u => u.type === 'broughtBook' || u.type === 'borrowedBook');
     } catch {
-      const localBrought = JSON.parse(localStorage.getItem('broughtBooks') || '[]');
-      const localBorrowed = JSON.parse(localStorage.getItem('borrowedBooks') || '[]');
-      return [...localBrought, ...localBorrowed];
+      // fallback: merge all local user books
+      let all = [];
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('broughtBooks_') || key.startsWith('borrowedBooks_')) {
+          all = all.concat(JSON.parse(localStorage.getItem(key) || '[]'));
+        }
+      });
+      return all;
     }
   },
 
-  // Fetch all appointments (for admin)
   async fetchAllAppointments() {
     try {
       const users = await this.fetchUsers();
       return users.filter(u => u.type === 'appointment');
     } catch {
-      return JSON.parse(localStorage.getItem('appointments') || '[]');
+      let all = [];
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('appointments_')) {
+          all = all.concat(JSON.parse(localStorage.getItem(key) || '[]'));
+        }
+      });
+      return all;
     }
   },
 
-  // Fetch all transactions (for admin)
   async fetchAllTransactions() {
     try {
       const users = await this.fetchUsers();
       return users.filter(u => u.type === 'transaction');
     } catch {
-      return JSON.parse(localStorage.getItem('transactionHistory') || '[]');
+      let all = [];
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('transactionHistory_')) {
+          all = all.concat(JSON.parse(localStorage.getItem(key) || '[]'));
+        }
+      });
+      return all;
     }
   },
 
-  // Add these methods to your export default object
+  // Book CRUD
+  async addBook(book) {
+    const response = await axios.post(API_URL, book);
+    return response.data;
+  },
+  async updateBook(id, book) {
+    const response = await axios.put(`${API_URL}/${id}, book`);
+    return response.data;
+  },
+  async deleteBook(id) {
+    const response = await axios.delete(`${API_URL}/${id}`);
+    return response.data;
+  },
 
-async addBook(book) {
-  // book.type should be 'broughtBook' or 'borrowedBook'
-  const response = await axios.post('https://683efaf01cd60dca33ddd10d.mockapi.io/users', book);
-  return response.data;
-},
-
-async updateBook(id, book) {
-  const response = await axios.put(`https://683efaf01cd60dca33ddd10d.mockapi.io/users/${id}`, book);
-  return response.data;
-},
-
-async deleteBook(id) {
-  const response = await axios.delete(`https://683efaf01cd60dca33ddd10d.mockapi.io/users/${id}`);
-  return response.data;
-},
-  
+  // Utility: Clear all user-specific localStorage on logout
+  clearUserLocalData(userId) {
+    [
+      'broughtBooks',
+      'borrowedBooks',
+      'transactionHistory',
+      'appointments',
+      'readBooks'
+    ].forEach(type => {
+      localStorage.removeItem(getUserKey(type, userId));
+    });
+  }
 };
