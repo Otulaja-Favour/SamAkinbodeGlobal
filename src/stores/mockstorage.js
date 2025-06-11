@@ -3,10 +3,6 @@ import axios from 'axios';
 const API_URL = 'https://683efaf01cd60dca33ddd10d.mockapi.io/users';
 const LOCAL_KEY = 'users_data';
 
-function getUserKey(type, userId) {
-  return` ${type}_${userId}`;
-}
-
 export default {
   // Fetch all users (admin only)
   async fetchUsers() {
@@ -238,30 +234,22 @@ export default {
     }
   },
 
-  // Book CRUD
-  async addBook(book) {
-    const response = await axios.post(API_URL, book);
-    return response.data;
-  },
-  async updateBook(id, book) {
-    const response = await axios.put(`${API_URL}/${id}, book`);
-    return response.data;
-  },
-  async deleteBook(id) {
-    const response = await axios.delete(`${API_URL}/${id}`);
-    return response.data;
-  },
+  // Add these methods to your export default object
 
-  // Utility: Clear all user-specific localStorage on logout
-  clearUserLocalData(userId) {
-    [
-      'broughtBooks',
-      'borrowedBooks',
-      'transactionHistory',
-      'appointments',
-      'readBooks'
-    ].forEach(type => {
-      localStorage.removeItem(getUserKey(type, userId));
-    });
-  }
+async addBook(book) {
+  // book.type should be 'broughtBook' or 'borrowedBook'
+  const response = await axios.post('https://683efaf01cd60dca33ddd10d.mockapi.io/users', book);
+  return response.data;
+},
+
+async updateBook(id, book) {
+  const response = await axios.put(`https://683efaf01cd60dca33ddd10d.mockapi.io/users/${id}`, book);
+  return response.data;
+},
+
+async deleteBook(id) {
+  const response = await axios.delete(`https://683efaf01cd60dca33ddd10d.mockapi.io/users/${id}`);
+  return response.data;
+},
+  
 };
