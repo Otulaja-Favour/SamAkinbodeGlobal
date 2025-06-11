@@ -21,11 +21,11 @@
                             <div>
                                 <h3 class="h5">Social Media</h3>
                                 <div class="mt-2">
-                                    <a href="https://x.com/Sam_Akinbode?t=o719IKiId-hqUG80GXNqEQ&s=09 " class="text-white me-3"><i class="bi bi-twitter fs-4"></i></a>
-                                    <a href="https://www.instagram.com/samakinbode04?igsh=dGRuaWlxem44YXdn " class="text-white"><i class="bi bi-linkedin fs-4"></i></a>
-                                    <a href="https://www.facebook.com/share/1RdkRgoUdr/  " class="text-white"><i class="bi bi-linkedin fs-4"></i></a>
-sort it out
-                                    <a href="https://www.tiktok.com/@tutor.sam5?_t=ZM-8x07QMY9xjS&_r=1 " class="text-white"><i class="bi bi-linkedin fs-4"></i></a>
+                                    <a href="https://x.com/Sam_Akinbode?t=o719IKiId-hqUG80GXNqEQ&s=09 " class="text-white me-3"><i  class="fa-brands fa-twitter"></i></a>
+                                    <a href="https://www.instagram.com/samakinbode04?igsh=dGRuaWlxem44YXdn " class="text-white me-3"><i class="fa-brands fa-instagram"></i></a>
+                                    <a href="https://www.facebook.com/share/1RdkRgoUdr/  " class="text-white me-3"><i class="fa-brands fa-facebook"></i></a>
+
+                                    <a href="https://www.tiktok.com/@tutor.sam5?_t=ZM-8x07QMY9xjS&_r=1 " class="text-white me-3"><i class="fa-brands fa-tiktok"></i></a>
                                 </div>
                             </div>
                         </div>
@@ -178,6 +178,10 @@ async onSubmit(event) {
     padding: 2rem;
     border-radius: 10px;
     box-shadow: var(--box-shadow);
+}
+a i{
+    color: white;
+    
 }
 
 </style>
