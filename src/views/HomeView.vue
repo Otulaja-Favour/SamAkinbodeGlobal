@@ -166,8 +166,8 @@ async validateLogin() {
     try {
       // Admin check
       if (
-        this.email === "otulajafavour@gmail.com" &&
-        this.password === "1234567890"
+        this.email === " akinbodetomiwa04@gmail.com " &&
+        this.password === "Sammyzion04"
       ) {
         toast.success('Admin login successful!');
         setTimeout(() => {
