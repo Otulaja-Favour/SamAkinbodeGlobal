@@ -3,43 +3,60 @@
     <div class="landingPage">
       <transition name="slide-left">
         <div class="imageAspect" v-if="showPage">
-         
-
-
           <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
-  <div class="carousel-indicators">
-    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
-    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
-  </div>
-  <div class="carousel-inner">
-    <div class="carousel-item active">
-      <img src="../assets/images/jag.jpg" class="d-block w-100" alt="...">
+            <div class="carousel-indicators">
+              <button
+                type="button"
+                data-bs-target="#carouselExampleIndicators"
+                data-bs-slide-to="0"
+                class="active"
+                aria-current="true"
+                aria-label="Slide 1"
+              ></button>
+              <button
+                type="button"
+                data-bs-target="#carouselExampleIndicators"
+                data-bs-slide-to="1"
+                aria-label="Slide 2"
+              ></button>
+              <button
+                type="button"
+                data-bs-target="#carouselExampleIndicators"
+                data-bs-slide-to="2"
+                aria-label="Slide 3"
+              ></button>
+            </div>
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <img src="../assets/images/jag.jpg" class="d-block w-100" alt="..." />
+              </div>
 
-    </div>
-  
-    <div class="carousel-item">
-      <img src="../assets/images/jay.jpg" class="d-block w-100" alt="...">
-    </div>
-    <div class="carousel-item">
-      <img src="../assets/images/jaj.jpg" class="d-block w-100" alt="...">
-    </div>
-    
-  </div>
-  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
-    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Previous</span>
-  </button>
-  <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
-    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Next</span>
-  </button>
-</div>
-
-
-
-
-
+              <div class="carousel-item">
+                <img src="../assets/images/jay.jpg" class="d-block w-100" alt="..." />
+              </div>
+              <div class="carousel-item">
+                <img src="../assets/images/jaj.jpg" class="d-block w-100" alt="..." />
+              </div>
+            </div>
+            <button
+              class="carousel-control-prev"
+              type="button"
+              data-bs-target="#carouselExampleIndicators"
+              data-bs-slide="prev"
+            >
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Previous</span>
+            </button>
+            <button
+              class="carousel-control-next"
+              type="button"
+              data-bs-target="#carouselExampleIndicators"
+              data-bs-slide="next"
+            >
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Next</span>
+            </button>
+          </div>
         </div>
       </transition>
 
@@ -50,52 +67,118 @@
           <div class="loginAspect">
             <template v-if="isLogin">
               <label for="email" class="form-label">Email</label>
-              <input type="email" class="form-control form-control-lg" id="email" placeholder="Enter Email" v-model="email">
+              <input
+                type="email"
+                class="form-control form-control-lg"
+                id="email"
+                placeholder="Enter Email"
+                v-model="email"
+                @input="validateField('email')"
+              />
               <div v-if="errors.email" class="error-msg">{{ errors.email }}</div>
-              
+
               <label for="password" class="form-label">Password</label>
-              <input type="password" class="form-control form-control-lg" id="password" placeholder="Enter Password" v-model="password">
+              <input
+                type="password"
+                class="form-control form-control-lg"
+                id="password"
+                placeholder="Enter Password"
+                v-model="password"
+                @input="validateField('password')"
+              />
               <div v-if="errors.password" class="error-msg">{{ errors.password }}</div>
-              
-              <button class="btn btn-primary my-4 center-btn" @click="validateLogin" :disabled="isSubmitting">Login</button>
+
+              <button
+                class="btn btn-primary my-4 center-btn"
+                @click="validateLogin"
+                :disabled="isSubmitting"
+              >
+                Login
+              </button>
               <p class="text-center">
                 Don't have an account?
-                <span @click="toggleForm" style="color:blue;cursor:pointer;">Create account</span>
+                <span @click="toggleForm" style="color: blue; cursor: pointer">Create account</span>
               </p>
             </template>
             <template v-else>
               <label for="FirstName" class="form-label">First Name</label>
-              <input type="text" class="form-control form-control-lg" id="FirstName" placeholder="Enter first name" v-model="firstName">
+              <input
+                type="text"
+                class="form-control form-control-lg"
+                id="FirstName"
+                placeholder="Enter first name"
+                v-model="firstName"
+                @input="validateField('firstName')"
+              />
               <div v-if="errors.firstName" class="error-msg">{{ errors.firstName }}</div>
-              
+
               <label for="lastName" class="form-label">Last Name</label>
-              <input type="text" class="form-control form-control-lg" id="lastName" placeholder="Enter last name" v-model="lastName">
+              <input
+                type="text"
+                class="form-control form-control-lg"
+                id="lastName"
+                placeholder="Enter last name"
+                v-model="lastName"
+                @input="validateField('lastName')"
+              />
               <div v-if="errors.lastName" class="error-msg">{{ errors.lastName }}</div>
-              
+
               <label for="email" class="form-label">Email</label>
-              <input type="email" class="form-control form-control-lg" id="email" placeholder="Enter Email" v-model="email">
+              <input
+                type="email"
+                class="form-control form-control-lg"
+                id="email"
+                placeholder="Enter Email"
+                v-model="email"
+                @input="validateField('email')"
+              />
               <div v-if="errors.email" class="error-msg">{{ errors.email }}</div>
-              
-              <label for="age" class="form-label">Age</label>
-              <input type="number" class="form-control form-control-lg" id="age" placeholder="Enter age" v-model="age">
-              <div v-if="errors.age" class="error-msg">{{ errors.age }}</div>
-              
+
               <label for="phoneNumber" class="form-label">Phone Number</label>
-              <input type="number" class="form-control form-control-lg" id="phoneNumber" placeholder="Enter phone number" v-model="phoneNumber">
+              <input
+                type="number"
+                class="form-control form-control-lg"
+                id="phoneNumber"
+                placeholder="Enter phone number"
+                v-model="phoneNumber"
+                @input="validateField('phoneNumber')"
+              />
               <div v-if="errors.phoneNumber" class="error-msg">{{ errors.phoneNumber }}</div>
-              
+
               <label for="password" class="form-label">Password</label>
-              <input type="password" class="form-control form-control-lg" id="password" placeholder="Enter Password" v-model="password">
+              <input
+                type="password"
+                class="form-control form-control-lg"
+                id="password"
+                placeholder="Enter Password"
+                v-model="password"
+                @input="validateField('password')"
+              />
               <div v-if="errors.password" class="error-msg">{{ errors.password }}</div>
-              
+
               <label for="confirmPassword" class="form-label">Confirm Password</label>
-              <input type="password" class="form-control form-control-lg" id="confirmPassword" placeholder="Confirm Password" v-model="confirmpassword">
-              <div v-if="errors.confirmPassword" class="error-msg">{{ errors.confirmPassword }}</div>
-              
-              <button class="btn btn-success my-4 center-btn" @click="validateSignUp" :disabled="isSubmitting">Sign Up</button>
+              <input
+                type="password"
+                class="form-control form-control-lg"
+                id="confirmPassword"
+                placeholder="Confirm Password"
+                v-model="confirmpassword"
+                @input="validateField('confirmPassword')"
+              />
+              <div v-if="errors.confirmPassword" class="error-msg">
+                {{ errors.confirmPassword }}
+              </div>
+
+              <button
+                class="btn btn-success my-4 center-btn"
+                @click="validateSignUp"
+                :disabled="isSubmitting"
+              >
+                Sign Up
+              </button>
               <p class="text-center">
                 Already have an account?
-                <span @click="toggleForm" style="color:blue;cursor:pointer;">Login</span>
+                <span @click="toggleForm" style="color: blue; cursor: pointer">Login</span>
               </p>
             </template>
           </div>
@@ -103,7 +186,10 @@
       </transition>
     </div>
   </div>
-  <footer class="text-white text-center  footer" style="background-color: #2c3e50; padding: 40px 0px; ">
+  <footer
+    class="text-white text-center footer"
+    style="background-color: #2c3e50; padding: 40px 0px"
+  >
     <div class="container">
       <p class="mb-0">© 2025 Library Management System. All rights reserved.</p>
     </div>
@@ -120,170 +206,177 @@ export default {
       firstName: '',
       lastName: '',
       email: '',
-      age: '',
       phoneNumber: '',
       password: '',
       confirmpassword: '',
       errors: {},
       showPage: false,
-      isSubmitting: false
+      isSubmitting: false,
     }
   },
   mounted() {
-    this.showPage = true;
+    this.showPage = true
   },
   methods: {
     toggleForm() {
-      this.isLogin = !this.isLogin;
-      this.errors = {};
-      this.firstName = '';
-      this.lastName = '';
-      this.email = '';
-      this.age = '';
-      this.password = '';
-      this.confirmpassword = '';
-      this.phoneNumber = '';
-      this.isSubmitting = false;
+      this.isLogin = !this.isLogin
+      this.errors = {}
+      this.firstName = ''
+      this.lastName = ''
+      this.email = ''
+      this.password = ''
+      this.confirmpassword = ''
+      this.phoneNumber = ''
+      this.isSubmitting = false
+      localStorage.removeItem('userId')
+      localStorage.removeItem('adminEmail')
     },
-
-    // In your HomeView.vue methods section
-async validateLogin() {
-  this.errors = {};
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!this.email) {
-    this.errors.email = "Email is required";
-  } else if (!emailRegex.test(this.email)) {
-    this.errors.email = "Enter a valid email address";
-  }
-  if (!this.password) {
-    this.errors.password = "Password is required";
-  } else if (this.password.length <= 5) {
-    this.errors.password = "Password must be more than 5 characters";
-  }
-
-  if (Object.keys(this.errors).length === 0) {
-    this.isSubmitting = true;
-    try {
-      // Admin check
-      if (
-        this.email === " akinbodetomiwa04@gmail.com " &&
-        this.password === "Sammyzion04"
-      ) {
-        toast.success('Admin login successful!');
-        setTimeout(() => {
-          this.$router.push('/admin');
-        }, 1000);
-        return;
+    validateField(field) {
+      // Validate a single field for real-time feedback
+      if (field === 'email') {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!this.email) {
+          this.errors.email = 'Email is required'
+        } else if (!emailRegex.test(this.email)) {
+          this.errors.email = 'Enter a valid email address'
+        } else {
+          delete this.errors.email
+        }
       }
-      // Normal user login
-      const users = await mockstorage.fetchUsers();
-      const user = users.find(
-        u => u.email === this.email && u.password === this.password
-      );
-      if (user) {
-        localStorage.setItem('userId', user.id);
-        toast.success('Login successful!');
-        setTimeout(() => {
-          this.$router.push('/dashboard');
-        }, 1500);
-      } else {
-        toast.error('Invalid email or password');
+      if (field === 'password') {
+        if (!this.password) {
+          this.errors.password = 'Password is required'
+        } else if (this.password.length <= 5) {
+          this.errors.password = 'Password must be more than 5 characters'
+        } else {
+          delete this.errors.password
+        }
       }
-    } catch (err) {
-      toast.error('Internet Error');
-    } finally {
-      this.isSubmitting = false;
-    }
-  }
-},
-    
-    async validateSignUp() {
-      this.errors = {};
-      const textRegex = /^[A-Za-z\s]+$/;
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!this.firstName) {
-        this.errors.firstName = "First name is required";
-      } else if (!textRegex.test(this.firstName)) {
-        this.errors.firstName = "First name must contain only letters";
+      if (field === 'firstName') {
+        if (!this.firstName) {
+          this.errors.firstName = 'First name is required'
+        } else {
+          delete this.errors.firstName
+        }
       }
-      if (!this.lastName) {
-        this.errors.lastName = "Last name is required";
-      } else if (!textRegex.test(this.lastName)) {
-        this.errors.lastName = "Last name must contain only letters";
+      if (field === 'lastName') {
+        if (!this.lastName) {
+          this.errors.lastName = 'Last name is required'
+        } else {
+          delete this.errors.lastName
+        }
       }
-      if (!this.email) {
-        this.errors.email = "Email is required";
-      } else if (!emailRegex.test(this.email)) {
-        this.errors.email = "Enter a valid email address";
+      if (field === 'phoneNumber') {
+        if (!this.phoneNumber) {
+          this.errors.phoneNumber = 'Phone number is required'
+        } else if (!/^\d{10,}$/.test(this.phoneNumber)) {
+          this.errors.phoneNumber = 'Enter a valid phone number'
+        } else {
+          delete this.errors.phoneNumber
+        }
       }
-      if (!this.age) {
-        this.errors.age = "Age is required";
-      } else if (isNaN(this.age) || Number(this.age) <= 0) {
-        this.errors.age = "Enter a valid age";
+      if (field === 'confirmPassword') {
+        if (!this.confirmpassword) {
+          this.errors.confirmPassword = 'Confirm your password'
+        } else if (this.confirmpassword !== this.password) {
+          this.errors.confirmPassword = 'Passwords do not match'
+        } else {
+          delete this.errors.confirmPassword
+        }
       }
-      if (!this.password) {
-        this.errors.password = "Password is required";
-      } else if (this.password.length <= 5) {
-        this.errors.password = "Password must be more than 5 characters";
-      }
-      if (!this.confirmpassword) {
-        this.errors.confirmPassword = "Confirm password is required";
-      } else if (this.confirmpassword !== this.password) {
-        this.errors.confirmPassword = "Passwords do not match";
-      }
-      if (!this.phoneNumber) {
-        this.errors.phoneNumber = "Please enter a phone number";
-      } else if (!/^\d{10}$/.test(this.phoneNumber)) {
-        this.errors.phoneNumber = "Phone number must be exactly 11 digits";
-      }
+    },
+    async validateLogin() {
+      this.errors = {}
+      this.validateField('email')
+      this.validateField('password')
       if (Object.keys(this.errors).length === 0) {
-        this.isSubmitting = true;
+        this.isSubmitting = true
         try {
-          const users = await mockstorage.fetchUsers();
-          const exists = users.some(u => u.email === this.email);
+          // Admin check
+          if (this.email === 'akinbodetomiwa04@gmail.com' && this.password === 'Sammyzion04') {
+            localStorage.setItem('adminEmail', this.email)
+            localStorage.removeItem('userId')
+            toast.success('Admin login successful!')
+            setTimeout(() => {
+              this.$router.push('/admin')
+            }, 1000)
+            return
+          }
+          // Normal user login
+          const users = await mockstorage.fetchUsers()
+          const user = users.find((u) => u.email === this.email && u.password === this.password)
+          if (user) {
+            localStorage.setItem('userId', user.id)
+            localStorage.removeItem('adminEmail')
+            toast.success('Login successful!')
+            setTimeout(() => {
+              this.$router.push('/dashboard')
+            }, 1500)
+          } else {
+            toast.error('Invalid email or password')
+          }
+        } catch (err) {
+          toast.error('Internet Error')
+        } finally {
+          this.isSubmitting = false
+        }
+      }
+    },
+    async validateSignUp() {
+      this.errors = {}
+      this.validateField('firstName')
+      this.validateField('lastName')
+      this.validateField('email')
+      this.validateField('phoneNumber')
+      this.validateField('password')
+      this.validateField('confirmPassword')
+      if (Object.keys(this.errors).length === 0) {
+        this.isSubmitting = true
+        try {
+          const users = await mockstorage.fetchUsers()
+          const exists = users.some((u) => u.email === this.email)
           if (exists) {
-            toast.error('Email already exists!');
-            return;
+            toast.error('Email already exists!')
+            return
           }
           await mockstorage.createUser({
             firstName: this.firstName,
             lastName: this.lastName,
             email: this.email,
-            age: this.age,
             phoneNumber: this.phoneNumber,
             password: this.password,
-            role: 'user'
-          });
-          toast.success('Sign up successful!');
-          this.toggleForm();
+            role: 'user',
+          })
+          toast.success('Sign up successful!')
+          this.toggleForm()
         } catch (err) {
-          toast.error('Error connecting to server');
+          toast.error('Error connecting to server')
         } finally {
-          this.isSubmitting = false;
+          this.isSubmitting = false
         }
       }
-    }
-  }
+    },
+  },
 }
 </script>
 
 <style scoped>
-.error-msg{
+.error-msg {
   color: red;
 }
-label{
+label {
   margin-top: 10px !important;
 }
-.landingPage{
+.landingPage {
   display: flex;
   flex-direction: row;
   justify-content: space-evenly;
   align-items: center !important;
-  min-height: 100vh;     
-  height: 100vh;          
+  min-height: 100vh;
+  height: 100vh;
   box-sizing: border-box;
 }
-.imageAspect{
+.imageAspect {
   margin-top: 10px;
   width: 50%;
   height: 600px;
@@ -293,20 +386,20 @@ label{
   justify-content: center;
   border-radius: 30px;
 }
-.imageAspect img{
+.imageAspect img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
   border-radius: 30px;
 }
-.authentications{
+.authentications {
   padding: 40px;
   width: 40%;
-  max-height: 600px;      
-  overflow-y: auto; 
+  max-height: 600px;
+  overflow-y: auto;
 }
-.center-btn{
+.center-btn {
   width: 100% !important;
   padding: 10px 0px;
 }
@@ -337,10 +430,10 @@ label{
   }
 }
 @media screen and (max-width: 700px) {
-  .landingPage{
+  .landingPage {
     width: 100%;
   }
-  .authentications{
+  .authentications {
     width: 100%;
     padding: 0;
     overflow: scroll;
@@ -349,7 +442,7 @@ label{
   .imageAspect {
     display: none;
   }
-  .footer{
+  .footer {
     margin: 0px !important;
   }
 }
