@@ -776,6 +776,7 @@ export default {
       }, 3)
     },
     openBookModal(mode, book = null) {
+      // Always reset the form and show the modal when adding a book
       this.modalMode = mode
       if (mode === 'edit' && book) {
         this.bookForm = { ...book }
@@ -788,6 +789,19 @@ export default {
       this.showBookModal = false
       this.resetBookForm()
       this.bookFormLoading = false
+    },
+    resetBookForm() {
+      this.bookForm = {
+        id: '',
+        title: '',
+        author: '',
+        price: '',
+        rent: '',
+        image: '',
+        description: '',
+        pdfUrl: '',
+        dateAdded: '',
+      }
     },
     async handleImageUpload(e) {
       const file = e.target.files[0]
