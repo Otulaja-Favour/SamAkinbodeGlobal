@@ -83,11 +83,11 @@
             </button>
           </div>
           <!-- Book Modal -->
-          <div v-if="showBookModal" class="modal-backdrop-custom">
-            <div class="modal-custom">
+          <div v-if="showBookModal" class="modal-backdrop-custom" style="width: 100% !important;">
+            <div class="modal-custom" style=" width: 100% !important;">
               <div
                 class="bg-white p-4 rounded shadow-lg"
-                style="min-width: 350px; max-width: 500px"
+                style="width: 100%; height: 80vh; overflow-y: scroll;"
               >
                 <h5 class="mb-3">{{ modalMode === 'edit' ? 'Edit Book' : 'Add Book' }}</h5>
                 <form @submit.prevent="addOrUpdateBook">
@@ -308,7 +308,7 @@
           </div>
           <!-- User Modal -->
           <div v-if="selectedUser" class="modal-backdrop-custom" @click.self="selectedUser = null">
-            <div class="modal-custom">
+            <div class="modal-custom" style="width: 60%; overflow-y: scroll; height: 70vh;">
               <div class="modal-header">
                 <h5 class="modal-title">User Books</h5>
                 <button type="button" class="btn-close" @click="selectedUser = null"></button>
@@ -1068,25 +1068,28 @@ export default {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.3);
-  z-index: 1040;
-  width: 100vw;
-  height: 100vh;
+  z-index: 2000;
+  width: 100%;
+  height: 100%;
+  overflow-y: scroll;
   display: flex;
   align-items: center;
   justify-content: center;
+  /* padding: 100px 0px; */
+  /* border: 10px solid green; */
 }
 .modal,
 .modal-custom {
   background: #fff;
   border-radius: 8px;
-  max-width: 500px;
-  width: 95vw;
+  max-width: 680px;
+  /* height: 70vh; */
   margin: 40px auto;
   padding: 24px;
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15);
-  position: relative;
+  position: fixed;
   z-index: 2000;
-  overflow-y: auto;
+  /* overflow-y: scroll; */
 }
 
 .profile-navbar {
@@ -1126,8 +1129,8 @@ export default {
   }
   .modal,
   .modal-custom {
-    max-width: 98vw;
-    width: 98vw;
+    /* max-width: 98vw; */
+    width: 94% !important;
     margin: 10px auto;
     padding: 10px;
     border-radius: 6px;
