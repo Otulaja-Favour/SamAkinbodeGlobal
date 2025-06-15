@@ -570,7 +570,7 @@ export default {
         { tab: 'overview', label: 'Home', icon: 'fas fa-chart-bar' },
         { tab: 'books', label: 'Books', icon: 'fas fa-book' },
         { tab: 'users', label: 'Users', icon: 'fas fa-users' },
-        { tab: 'transactions', label: 'Transactions', icon: 'fas fa-receipt' },
+        { tab: 'transactions', label: 'History', icon: 'fas fa-receipt' },
       ],
       books: [],
       users: [],
