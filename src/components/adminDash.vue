@@ -590,7 +590,7 @@ export default {
       },
       adminProfile: {
         name: 'Akinbode',
-        email: 'otulajafavour@gmail.com',
+        email: 'akinbodetomiwa04@gmail.com',
       },
       selectedUser: null,
       showBookModal: false,

@@ -90,10 +90,10 @@
                       class="btn btn-outline-secondary btn-sm"
                       @click="showCommentModal(book, idx, 'owned')"
                     >
-                      <i class="fas fa-comment"></i> Comment
+                      <i class="fas fa-comment"></i> 
                     </button>
                     <button class="btn btn-outline-success btn-sm" @click="downloadBook(book)">
-                      <i class="fas fa-download"></i> Download
+                      <i class="fas fa-download"></i> 
                     </button>
                   </div>
                 </div>
@@ -121,6 +121,7 @@
         <!-- My Rentals -->
         <div v-else-if="dashboardTab === 'rentals'">
           <h4>My Rentals ({{ rentedBooks.length }})</h4>
+          <marquee behavior="scroll" direction="left">All borowed books are dued for two weeks.</marquee>
           <div v-if="rentedBooks.length === 0" class="alert alert-info">No books rented yet.</div>
           <div class="row" v-else>
             <div class="col-md-4 mb-3" v-for="(book, idx) in rentedBooks" :key="book.id">
@@ -150,14 +151,14 @@
                       class="btn btn-outline-secondary btn-sm"
                       @click="showCommentModal(book, idx, 'rented')"
                     >
-                      <i class="fas fa-comment"></i> Comment
+                      <i class="fas fa-comment"></i> 
                     </button>
                     <button
                       class="btn btn-outline-danger btn-sm"
                       @click="returnRentedBook(book.id, idx)"
                       disabled
                     >
-                      <i class="fas fa-undo"></i> Return
+                      <i class="fas fa-undo"></i> 
                     </button>
                   </div>
                 </div>

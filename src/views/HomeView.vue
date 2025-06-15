@@ -62,8 +62,8 @@
 
       <transition name="slide-right">
         <div class="authentications" v-if="showPage">
-          <h3 class="text-center" v-if="isLogin">Welcome back</h3>
-          <h3 class="text-center" v-else>Join site name</h3>
+          <h3 class="text-center py-4" v-if="isLogin">Welcome back</h3>
+          <h3 class="text-center py-4" v-else>Join site name</h3>
           <div class="loginAspect">
             <template v-if="isLogin">
               <label for="email" class="form-label">Email</label>
