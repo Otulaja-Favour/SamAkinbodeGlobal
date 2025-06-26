@@ -296,6 +296,7 @@ export default {
           if (this.email === 'akinbodetomiwa04@gmail.com' && this.password === 'Sammyzion04') {
             localStorage.setItem('adminEmail', this.email)
             localStorage.removeItem('userId')
+            
             toast.success('Admin login successful!')
             setTimeout(() => {
               this.$router.push('/admin')

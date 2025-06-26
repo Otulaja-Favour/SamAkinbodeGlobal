@@ -160,16 +160,17 @@
   </div>
 </template>
 
+
+
 <script>
 import mockstorage from '@/stores/mockstorage'
-import axios from 'axios'
 
 export default {
-  name: 'CartCount',
+  name: 'CartComponent',
+  
   data() {
     return {
       cart: [],
-      userId: localStorage.getItem('userId') || null,
       userEmail: '',
       loading: false,
       showModal: false,
@@ -178,193 +179,167 @@ export default {
       orderBooks: [],
       orderDate: '',
       orderReference: '',
+      PAYSTACK_KEY: 'pk_live_f96aa56b0b5b7fb5ba3ee4dd322344e920cd3089'
     }
   },
+
   computed: {
     isCartEmpty() {
       return this.cart.length === 0
     },
+
     totalPrice() {
       return this.cart.reduce((sum, item) => sum + Number(item.price || 0), 0)
-    },
+    }
   },
-  mounted() {
-    this.loadCart()
-    window.addEventListener('cart-updated', this.loadCart)
-    if (this.userId) this.fetchUserData()
-  },
-  beforeDestroy() {
-    window.removeEventListener('cart-updated', this.loadCart)
-  },
+
   methods: {
-    loadCart() {
-      this.cart = JSON.parse(localStorage.getItem('cart') || '[]')
-    },
-    async fetchUserData() {
-      if (!this.userId) {
-        this.showFeedback('No user logged in.')
-        return
-      }
-      this.loading = true
+    async loadCart() {
       try {
-        const user = await mockstorage.fetchUser(this.userId)
-        this.userEmail = user?.email || ''
-        if (!this.userEmail) {
-          this.showFeedback('User email not found in database.')
+        // Load cart from session storage
+        const savedCart = localStorage.getItem('cart')
+        if (savedCart) {
+          this.cart = JSON.parse(savedCart)
+        }
+        
+        // Get user email from session
+        const email = sessionStorage.getItem('userEmail')
+        if (email) {
+          this.userEmail = email
         }
       } catch (error) {
-        console.error('Error fetching user data:', error)
-        this.showFeedback('Failed to fetch user data.')
-      } finally {
-        this.loading = false
+        console.error('Failed to load cart:', error)
+        this.cart = []
       }
     },
-    deleteItem(idx) {
-      this.cart.splice(idx, 1)
-      localStorage.setItem('cart', JSON.stringify(this.cart))
-      window.dispatchEvent(new CustomEvent('cart-updated', { detail: this.cart.length }))
+
+    saveCart() {
+      try {
+        sessionStorage.setItem('cart', JSON.stringify(this.cart))
+      } catch (error) {
+        console.error('Failed to save cart:', error)
+        this.showModalMessage('Failed to save cart', true)
+      }
     },
-    showFeedback(message) {
+
+    deleteItem(index) {
+      this.cart.splice(index, 1)
+      this.saveCart()
+      this.updateCartCount()
+    },
+
+    updateCartCount() {
+      window.dispatchEvent(new CustomEvent('cart-updated', { 
+        detail: this.cart.length 
+      }))
+    },
+
+    showModalMessage(message, isError = false) {
       this.modalMessage = message
       this.showModal = true
     },
+
     closeModal() {
       this.showModal = false
       this.modalMessage = ''
     },
+
     closeOrderModal() {
       this.showOrderModal = false
-      this.orderBooks = []
-      this.orderDate = ''
-      this.orderReference = ''
-      this.$router.push('/profile') // Redirect to profile after closing
+      this.$router.push('/books')
     },
-    async processPaymentSuccess(response) {
-      if (!this.userId) {
-        this.showFeedback('User not found. Please log in again.')
-        return
-      }
-      this.loading = true
-      const now = new Date().toLocaleString()
-      const processedBooks = [...this.cart] // Store cart for order modal
 
-      // Prepare data for API and localStorage
-      const newBooks = []
-      const newTransactions = []
-      this.cart.forEach((item) => {
-        const bookData = { ...item, userId: this.userId }
-        if (item.action === 'buy') {
-          newBooks.push({ ...bookData, type: 'broughtBook' })
-          newTransactions.push({
-            ...bookData,
-            type: 'transaction',
-            date: now,
-            reference: response.reference,
-          })
-        } else if (item.action === 'borrow') {
-          newBooks.push({ ...bookData, type: 'borrowedBook', rentalDate: now })
-          newTransactions.push({
-            ...bookData,
-            type: 'transaction',
-            date: now,
-            reference: response.reference,
-          })
-        }
-      })
-
-      // Send both borrowed and bought books to the API for admin visibility
-      let apiSuccess = true
-      try {
-        await mockstorage.updateUser(this.userId, {
-          id: this.userId,
-          email: this.userEmail,
-          lastUpdated: now,
-        })
-        for (const book of newBooks) {
-          try {
-            await mockstorage.addBook({ ...book, userId: this.userId })
-          } catch (error) {
-            console.error(`Error saving book for user ${this.userId}:`, error)
-            apiSuccess = false
-          }
-        }
-        for (const transaction of newTransactions) {
-          try {
-            if (typeof mockstorage.addTransaction === 'function') {
-              await mockstorage.addTransaction({ ...transaction, userId: this.userId })
-            }
-            // Removed axios fallback for transaction
-          } catch (error) {
-            console.error(`Error saving transaction for user ${this.userId}:`, error)
-            apiSuccess = false
-          }
-        }
-      } catch (error) {
-        console.error(`Error updating API for user ${this.userId}:`, error)
-        apiSuccess = false
-      }
-
-      // Update localStorage
-      const broughtBooks = JSON.parse(localStorage.getItem(`broughtBooks_${this.userId}`) || '[]')
-      const borrowedBooks = JSON.parse(localStorage.getItem(`borrowedBooks_${this.userId}`) || '[]')
-      let transactionHistory = JSON.parse(
-        localStorage.getItem(`transactionHistory_${this.userId}`) || '[]',
-      )
-      broughtBooks.push(...newBooks.filter((b) => b.type === 'broughtBook'))
-      borrowedBooks.push(...newBooks.filter((b) => b.type === 'borrowedBook'))
-      transactionHistory = [...transactionHistory, ...newTransactions]
-
-      localStorage.setItem(`broughtBooks_${this.userId}`, JSON.stringify(broughtBooks))
-      localStorage.setItem(`borrowedBooks_${this.userId}`, JSON.stringify(borrowedBooks))
-      localStorage.setItem(`transactionHistory_${this.userId}`, JSON.stringify(transactionHistory))
-
-      // Clear cart
-      localStorage.removeItem('cart')
-      this.cart = []
-      window.dispatchEvent(new CustomEvent('cart-updated', { detail: 0 }))
-
-      // Show order confirmation
-      this.loading = false
-      this.orderBooks = processedBooks
-      this.orderDate = now
-      this.orderReference = response.reference
-      this.showOrderModal = true
-      if (!apiSuccess) {
-        this.showFeedback('Some data saved locally due to API issues.')
-      }
-    },
-    handlePaymentSuccess(response) {
-      this.processPaymentSuccess(response)
-    },
     checkoutDirect() {
-      if (!this.userId) {
-        this.showFeedback('Please log in to proceed with checkout.')
-        return
-      }
       if (!this.userEmail) {
-        this.showFeedback('User email not found. Please log in again.')
+        this.$router.push('/')
         return
       }
-      if (!window.PaystackPop) {
-        this.showFeedback('Payment system not loaded. Please check your internet connection.')
-        return
+
+      try {
+        const handler = window.PaystackPop.setup({
+          key: this.PAYSTACK_KEY,
+          email: this.userEmail.trim(),
+          amount: Math.round(this.totalPrice * 100),
+          currency: 'NGN',
+          ref: `BV-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          callback: (response) => {
+            this.processPaymentSuccess(response)
+          },
+          onClose: () => {
+            this.showModalMessage('Payment cancelled')
+          }
+        })
+
+        handler.openIframe()
+      } catch (error) {
+        console.error('Payment setup failed:', error)
+        this.showModalMessage('Payment initialization failed. Please try again.', true)
       }
-      if (typeof this.handlePaymentSuccess !== 'function') {
-        this.showFeedback('Payment setup failed. Please try again.')
-        return
-      }
-      const handler = window.PaystackPop.setup({
-        key: 'pk_test_055ff01887157684e74ac380a88d95b89ad6192f',
-        email: this.userEmail,
-        amount: this.totalPrice * 100,
-        currency: 'NGN',
-        ref: `${Math.floor(Math.random() * 1000000000 + 1)}`,
-        callback: this.handlePaymentSuccess.bind(this),
-        onClose: () => this.showFeedback('Payment window closed.'),
-      })
-      handler.openIframe()
     },
+
+    async processPaymentSuccess(response) {
+      if (!response?.reference) {
+        this.showModalMessage('Invalid payment response', true)
+        return
+      }
+
+      this.loading = true
+
+      try {
+        const transactionData = this.cart.map(item => ({
+          ...item,
+          reference: response.reference,
+          date: new Date().toISOString(),
+          status: 'completed',
+          userEmail: this.userEmail
+        }))
+
+        // Save transaction
+        await mockstorage.saveTransaction(this.userEmail, transactionData)
+
+        // Process books
+        for (const item of this.cart) {
+          const bookData = {
+            ...item,
+            purchaseDate: new Date().toISOString(),
+            transactionRef: response.reference,
+            userEmail: this.userEmail
+          }
+
+          const collectionName = item.action === 'buy' ? 'broughtBook' : 'borrowedBook'
+          await mockstorage.saveBook(collectionName, this.userEmail, bookData)
+        }
+
+        // Update order information
+        this.orderBooks = [...this.cart]
+        this.orderDate = new Date().toISOString()
+        this.orderReference = response.reference
+        
+        // Clear cart
+        sessionStorage.removeItem('cart')
+        this.cart = []
+        this.updateCartCount()
+        
+        // Show confirmation
+        this.showOrderModal = true
+      } catch (error) {
+        console.error('Transaction processing failed:', error)
+        this.showModalMessage('Failed to process order. Please contact support.', true)
+      } finally {
+        this.loading = false
+      }
+    }
   },
+
+  created() {
+    this.loadCart()
+    window.addEventListener('user-logged-in', this.loadCart)
+  },
+
+  beforeUnmount() {
+    this.saveCart()
+    window.removeEventListener('user-logged-in', this.loadCart)
+  }
 }
 </script>
 
@@ -375,8 +350,21 @@ export default {
   object-fit: cover;
   border-radius: 4px;
 }
+
 .list-group-item {
   display: flex;
   align-items: center;
 }
+
+.modal {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
 </style>
+
+
+

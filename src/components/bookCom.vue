@@ -151,11 +151,13 @@
 </template>
 
 <script>
-import booksstore from '@/stores/booksstore'
+import mockstorage from '@/stores/mockstorage'
 import NavBar from '@/components/navBar.vue'
 
 export default {
+  name: 'BookComponent',
   components: { NavBar },
+  
   data() {
     return {
       books: [],
@@ -163,13 +165,14 @@ export default {
       pageSize: 10,
       showModal: false,
       selectedBook: {},
-      cart: JSON.parse(localStorage.getItem('cart')) || [],
-      cartCount: JSON.parse(localStorage.getItem('cart'))?.length || 0,
+      cart: JSON.parse(localStorage.getItem('cart') || '[]'),
+      cartCount: 0,
       loading: true,
       search: '',
       sortBy: '',
     }
   },
+
   computed: {
     filteredBooks() {
       let filtered = this.books
@@ -179,12 +182,12 @@ export default {
           (b) =>
             (b.title && b.title.toLowerCase().includes(s)) ||
             (b.author && b.author.toLowerCase().includes(s)) ||
-            (b.description && b.description.toLowerCase().includes(s)),
+            (b.description && b.description.toLowerCase().includes(s))
         )
       }
-      // Sort
+      
+      // Sort books
       if (this.sortBy === 'date') {
-        // If your API provides a date field, use it. Otherwise, fallback to id (assuming higher id is newer)
         filtered = filtered.slice().sort((a, b) => {
           if (a.dateAdded && b.dateAdded) {
             return new Date(b.dateAdded) - new Date(a.dateAdded)
@@ -198,98 +201,175 @@ export default {
       }
       return filtered
     },
+
     paginatedBooks() {
       const start = (this.currentPage - 1) * this.pageSize
       return this.filteredBooks.slice(start, start + this.pageSize)
     },
+
     totalPages() {
       return Math.ceil(this.filteredBooks.length / this.pageSize)
-    },
+    }
   },
-  async mounted() {
-    this.loading = true
-    this.books = await booksstore.fetchAllBooks()
-    this.loading = false
-    this.updateCartIcon()
-    window.addEventListener('cart-updated', this.handleCartUpdate)
-  },
-  beforeUnmount() {
-    window.removeEventListener('cart-updated', this.handleCartUpdate)
-  },
-  watch: {
-    search() {
-      this.currentPage = 1
-    },
-    sortBy() {
-      this.currentPage = 1
-    },
-  },
+
   methods: {
+    loadCart() {
+      try {
+        const savedCart = localStorage.getItem('cart')
+        if (savedCart) {
+          this.cart = JSON.parse(savedCart)
+          this.cartCount = this.cart.length
+          this.updateCartIcon()
+        }
+      } catch (error) {
+        console.error('Failed to load cart:', error)
+        this.cart = []
+        this.cartCount = 0
+      }
+    },
+
+    saveCart() {
+      try {
+        localStorage.setItem('cart', JSON.stringify(this.cart))
+      } catch (error) {
+        console.error('Failed to save cart:', error)
+      }
+    },
+
+    handleCartUpdate(event) {
+      this.cartCount = event.detail || 0
+    },
+
+    updateCartIcon() {
+      this.cartCount = this.cart.length
+      window.dispatchEvent(new CustomEvent('cart-updated', { 
+        detail: this.cartCount 
+      }))
+      this.saveCart()
+    },
+
+    addToCart(book, type) {
+      if (!book?.id) {
+        this.showToast('Invalid book data', true)
+        return
+      }
+
+      if (this.isInCart(book, type === 'buy' ? 'borrow' : 'buy')) {
+        this.showToast(
+          `You can't ${type} this book because it's already in your cart as ${
+            type === 'buy' ? 'rent' : 'buy'
+          }`,
+          true
+        )
+        return
+      }
+
+      if (this.isInCart(book, type)) {
+        this.showToast(`Already in cart as ${type}.`, true)
+        return
+      }
+
+      const cartItem = {
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        image: book.image,
+        action: type,
+        price: type === 'buy' ? book.price : book.rent,
+        dateAdded: new Date().toISOString()
+      }
+
+      this.cart.push(cartItem)
+      this.saveCart()
+      this.updateCartIcon()
+      this.showToast('Added to cart!')
+      this.closeModal()
+    },
+
+    isInCart(book, type) {
+      return this.cart.some(item => item.id === book.id && item.action === type)
+    },
+
+    async fetchBooks() {
+      try {
+        this.loading = true
+        const books = await mockstorage.fetchAllBooks()
+        if (Array.isArray(books)) {
+          this.books = books
+        } else {
+          throw new Error('Invalid books data received')
+        }
+      } catch (error) {
+        console.error('Failed to fetch books:', error)
+        this.showToast('Failed to load books', true)
+        this.books = []
+      } finally {
+        this.loading = false
+      }
+    },
+
+    showToast(message, isError = false) {
+      const toast = document.createElement('div')
+      toast.textContent = message
+      toast.style.position = 'fixed'
+      toast.style.top = '10px'
+      toast.style.right = '30px'
+      toast.style.background = isError ? '#dc3545' : '#28a745'
+      toast.style.color = '#fff'
+      toast.style.padding = '12px 24px'
+      toast.style.borderRadius = '6px'
+      toast.style.zIndex = '9999'
+      toast.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)'
+      
+      document.body.appendChild(toast)
+      setTimeout(() => {
+        document.body.removeChild(toast)
+      }, 3000)
+    },
+
     goToPage(page) {
       if (page >= 1 && page <= this.totalPages) {
         this.currentPage = page
         window.scrollTo({ top: 0, behavior: 'smooth' })
       }
     },
+
     openModal(book) {
-      this.selectedBook = book
+      this.selectedBook = { ...book }
       this.showModal = true
     },
+
     closeModal() {
       this.showModal = false
       this.selectedBook = {}
-    },
-    isInCart(book, type) {
-      return this.cart.some((item) => item.id === book.id && item.action === type)
-    },
-    addToCart(book, type) {
-      if (this.isInCart(book, type === 'buy' ? 'borrow' : 'buy')) {
-        this.showToast(
-          `You can't ${type} this book because it's already in your cart as ${type === 'buy' ? 'rent' : 'buy'}.`,
-        )
-        return
-      }
-      if (this.isInCart(book, type)) {
-        this.showToast(`Already in cart as ${type}.`)
-        return
-      }
-      const cartItem = {
-        ...book,
-        action: type,
-        price: type === 'buy' ? book.price : book.rent,
-      }
-      this.cart.push(cartItem)
-      localStorage.setItem('cart', JSON.stringify(this.cart))
-      this.updateCartIcon()
-      this.showToast('Added to cart!')
-      this.closeModal()
-    },
-    updateCartIcon() {
-      this.cartCount = this.cart.length
-      this.$emit('update-cart-count', this.cartCount)
-      window.dispatchEvent(new CustomEvent('cart-updated', { detail: this.cartCount }))
-    },
-    handleCartUpdate(e) {
-      this.cartCount = e.detail
-    },
-    showToast(message) {
-      const toast = document.createElement('div')
-      toast.textContent = message
-      toast.style.position = 'fixed'
-      toast.style.top = '10px'
-      toast.style.right = '30px'
-      toast.style.background = '#28a745'
-      toast.style.color = '#fff'
-      toast.style.padding = '12px 24px'
-      toast.style.borderRadius = '6px'
-      toast.style.zIndex = 9999
-      toast.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)'
-      document.body.appendChild(toast)
-      setTimeout(() => {
-        document.body.removeChild(toast)
-      }, 2000)
-    },
+    }
   },
+
+  async created() {
+    this.loadCart()
+    await this.fetchBooks()
+    window.addEventListener('cart-updated', this.handleCartUpdate)
+  },
+
+  beforeUnmount() {
+    this.saveCart()
+    window.removeEventListener('cart-updated', this.handleCartUpdate)
+  },
+
+  watch: {
+    cart: {
+      handler() {
+        this.saveCart()
+      },
+      deep: true
+    },
+    search() {
+      this.currentPage = 1
+    },
+    sortBy() {
+      this.currentPage = 1
+    }
+  }
 }
 </script>
 
@@ -300,6 +380,7 @@ export default {
   align-items: center;
   justify-content: center;
 }
+
 .modal {
   background: rgba(0, 0, 0, 0.3);
   position: fixed;
@@ -312,6 +393,7 @@ export default {
   align-items: center;
   justify-content: center;
 }
+
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -321,6 +403,7 @@ export default {
   background: rgba(0, 0, 0, 0.3);
   z-index: 1040;
 }
+
 .badge {
   background: #dc3545;
   color: #fff;
@@ -330,6 +413,11 @@ export default {
   margin-left: 4px;
   vertical-align: top;
 }
+
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
 .card:hover {
   transform: translateY(-10px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);

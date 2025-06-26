@@ -1,285 +1,187 @@
 import axios from 'axios'
 
-const API_URL = 'https://683efaf01cd60dca33ddd10d.mockapi.io/users'
-const LOCAL_KEY = 'users_data'
+// Configuration
+const CONFIG = {
+  BASE_URL: 'http://localhost:3000',
+  SESSION_KEY: 'current_user_data',
+  TIMEOUT: 5000
+}
 
-function getUserKey(type, userId) {
-  return `${type}_${userId}`
+const ENDPOINTS = {
+  USERS: `${CONFIG.BASE_URL}/users`,
+  BOOKS: `${CONFIG.BASE_URL}/books`,
+  TRANSACTIONS: `${CONFIG.BASE_URL}/transactions`,
+  APPOINTMENTS: `${CONFIG.BASE_URL}/appointments`,
+  COMMENTS: `${CONFIG.BASE_URL}/comments`
+}
+
+const utils = {
+  setSessionUser(userData) {
+    try {
+      const encoded = btoa(JSON.stringify(userData))
+      sessionStorage.setItem(CONFIG.SESSION_KEY, encoded)
+      return true
+    } catch (err) {
+      console.error('Session storage error:', err)
+      return false
+    }
+  },
+
+  getSessionUser() {
+    try {
+      const encoded = sessionStorage.getItem(CONFIG.SESSION_KEY)
+      return encoded ? JSON.parse(atob(encoded)) : null
+    } catch {
+      return null
+    }
+  }
 }
 
 export default {
-  // Fetch all users (admin only)
   async fetchUsers() {
     try {
-      const response = await Promise.race([
-        axios.get(API_URL),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000)),
-      ])
-      localStorage.setItem(LOCAL_KEY, JSON.stringify(response.data))
-      return response.data
+      const res = await axios.get(ENDPOINTS.USERS)
+      return res.data
     } catch (err) {
-      const local = localStorage.getItem(LOCAL_KEY)
-      if (local) return JSON.parse(local)
+      console.error('Fetch users failed:', err)
       return []
     }
   },
 
-  // Fetch a single user by ID
   async fetchUser(id) {
     if (!id) return null
+    const cached = utils.getSessionUser()
+    if (cached?.id === id) return cached
+
     try {
-      const response = await Promise.race([
-        axios.get(`${API_URL}/${id}`),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000)),
-      ])
-      return response.data
+      const res = await axios.get(`${ENDPOINTS.USERS}/${id}`)
+      utils.setSessionUser(res.data)
+      return res.data
     } catch (err) {
-      const local = localStorage.getItem(LOCAL_KEY)
-      if (local) {
-        const users = JSON.parse(local)
-        return users.find((u) => u.id == id) || null
-      }
+      console.error('Fetch user failed:', err)
       return null
     }
   },
 
-  // Create a new user
-  async createUser(userData) {
-    const response = await axios.post(API_URL, userData)
-    let users = []
-    try {
-      users = await this.fetchUsers()
-    } catch {}
-    users.push(response.data)
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(users))
-    return response.data
+  async createUser(user) {
+    const res = await axios.post(ENDPOINTS.USERS, user)
+    utils.setSessionUser(res.data)
+    return res.data
   },
 
-  // Update a user
-  async updateUser(id, userData) {
-    const response = await axios.put(`${API_URL}/${id}`, userData)
-    let users = []
-    try {
-      users = await this.fetchUsers()
-    } catch {}
-    users = users.map((u) => (u.id == id ? response.data : u))
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(users))
-    return response.data
+  async updateUser(id, user) {
+    const res = await axios.put(`${ENDPOINTS.USERS}/${id}`, user)
+    const current = utils.getSessionUser()
+    if (current?.id === id) utils.setSessionUser(res.data)
+    return res.data
   },
 
-  // Delete a user
   async deleteUser(id) {
-    const response = await axios.delete(`${API_URL}/${id}`)
-    let users = []
-    try {
-      users = await this.fetchUsers()
-    } catch {}
-    users = users.filter((u) => u.id != id)
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(users))
-    return response.data
+    await axios.delete(`${ENDPOINTS.USERS}/${id}`)
+    const current = utils.getSessionUser()
+    if (current?.id === id) sessionStorage.removeItem(CONFIG.SESSION_KEY)
+    return { success: true }
   },
 
-  // Save brought books for a user
-  async saveBroughtBooks(userId, books) {
-    if (!userId || !Array.isArray(books)) return
-    const transactions = []
-    for (const book of books) {
-      const userData = { ...book, userId, type: 'broughtBook' }
-      await axios.post(API_URL, userData)
-      transactions.push({
-        title: book.title,
-        price: book.price || 0, // Assuming book has a price
-        action: 'buy',
-        date: new Date().toLocaleString(),
-        reference: `BUY-${book.id || Date.now()}`,
-      })
-    }
-    let local = JSON.parse(localStorage.getItem(getUserKey('broughtBooks', userId)) || '[]')
-    local = local.concat(books)
-    localStorage.setItem(getUserKey('broughtBooks', userId), JSON.stringify(local))
-    await this.saveTransactionHistory(userId, transactions)
+  logout() {
+    sessionStorage.removeItem(CONFIG.SESSION_KEY)
   },
 
-  // Save borrowed books for a user
-  async saveBorrowedBooks(userId, books) {
-    if (!userId || !Array.isArray(books)) return
-    const transactions = []
-    for (const book of books) {
-      const userData = { ...book, userId, type: 'borrowedBook' }
-      await axios.post(API_URL, userData)
-      transactions.push({
-        title: book.title,
-        price: 0, // Rentals might not have a direct price, setting to 0 for now
-        action: 'rent',
-        date: new Date().toLocaleString(),
-        reference: `RENT-${book.id || Date.now()}`,
-      })
-    }
-    let local = JSON.parse(localStorage.getItem(getUserKey('borrowedBooks', userId)) || '[]')
-    local = local.concat(books)
-    localStorage.setItem(getUserKey('borrowedBooks', userId), JSON.stringify(local))
-    await this.saveTransactionHistory(userId, transactions)
+  async saveBook(type, userId, book) {
+    if (!userId || !book || !type) return
+    const bookData = { ...book, userId, type }
+    const res = await axios.post(ENDPOINTS.BOOKS, bookData)
+    return res.data
   },
 
-  // Save transaction history for a user
-  async saveTransactionHistory(userId, transactions) {
-    if (!userId || !Array.isArray(transactions)) return
-    for (const tx of transactions) {
-      const txData = { ...tx, userId, type: 'transaction' }
-      await axios.post(API_URL, txData)
-    }
-    let local = JSON.parse(localStorage.getItem(getUserKey('transactionHistory', userId)) || '[]')
-    local = local.concat(transactions)
-    localStorage.setItem(getUserKey('transactionHistory', userId), JSON.stringify(local))
+  async fetchBooks(type, userId) {
+    const res = await axios.get(ENDPOINTS.BOOKS)
+    return res.data.filter((b) => b.userId === userId && b.type === type)
   },
 
-  // Fetch brought books for a user
-  async fetchBroughtBooks(userId) {
-    if (!userId) return []
-    try {
-      const users = await this.fetchUsers()
-      return users.filter((u) => u.type === 'broughtBook' && u.userId == userId)
-    } catch {
-      return JSON.parse(localStorage.getItem(getUserKey('broughtBooks', userId)) || '[]')
+  async returnBook(bookId) {
+    return await axios.delete(`${ENDPOINTS.BOOKS}/${bookId}`)
+  },
+
+  async saveTransaction(userId, txs) {
+    for (const tx of txs) {
+      const data = { ...tx, userId, type: 'transaction' }
+      await axios.post(ENDPOINTS.TRANSACTIONS, data)
     }
   },
 
-  // Fetch borrowed books for a user
-  async fetchBorrowedBooks(userId) {
-    if (!userId) return []
-    try {
-      const users = await this.fetchUsers()
-      return users.filter((u) => u.type === 'borrowedBook' && u.userId == userId)
-    } catch {
-      return JSON.parse(localStorage.getItem(getUserKey('borrowedBooks', userId)) || '[]')
-    }
+  async fetchTransactions(userId) {
+    const res = await axios.get(ENDPOINTS.TRANSACTIONS)
+    return res.data.filter((t) => t.userId === userId)
   },
 
-  // Fetch transaction history for a user
-  async fetchTransactionHistory(userId) {
-    if (!userId) return []
-    try {
-      const users = await this.fetchUsers()
-      return users.filter((u) => u.type === 'transaction' && u.userId == userId)
-    } catch {
-      return JSON.parse(localStorage.getItem(getUserKey('transactionHistory', userId)) || '[]')
-    }
-  },
-
-  // Save a comment to a book (by id, for a user)
-  async saveBookComment(bookId, comments) {
-    if (!bookId) return
-    const users = await this.fetchUsers()
-    const book = users.find((u) => u.id == bookId)
-    if (book) {
-      book.comments = comments
-      await this.updateUser(bookId, book)
-    }
-  },
-
-  // Return a borrowed book (delete from API and localStorage for user)
-  async returnBorrowedBook(bookId, userId) {
-    if (!bookId || !userId) return
-    await this.deleteUser(bookId)
-    let local = JSON.parse(localStorage.getItem(getUserKey('borrowedBooks', userId)) || '[]')
-    local = local.filter((b) => b.id != bookId)
-    localStorage.setItem(getUserKey('borrowedBooks', userId), JSON.stringify(local))
-  },
-
-  // Appointments for a user
-  async fetchAppointments(userId) {
-    if (!userId) return []
-    try {
-      const users = await this.fetchUsers()
-      return users.filter((u) => u.type === 'appointment' && u.userId == userId)
-    } catch {
-      return JSON.parse(localStorage.getItem(getUserKey('appointments', userId)) || '[]')
-    }
-  },
   async saveAppointment(userId, appointment) {
-    if (!userId) return
     const data = { ...appointment, userId, type: 'appointment' }
-    await axios.post(API_URL, data)
-    let local = JSON.parse(localStorage.getItem(getUserKey('appointments', userId)) || '[]')
-    local.push(data)
-    localStorage.setItem(getUserKey('appointments', userId), JSON.stringify(local))
+    const res = await axios.post(ENDPOINTS.APPOINTMENTS, data)
+    return res.data
   },
 
-  // Save user details
-  async saveUser(user) {
-    if (!user.id) {
-      return await this.createUser(user)
-    } else {
-      return await this.updateUser(user.id, user)
+  async fetchAppointments(userId) {
+    const res = await axios.get(ENDPOINTS.APPOINTMENTS)
+    return res.data.filter((a) => a.userId === userId)
+  },
+
+  async saveComment(userId, bookId, commentText) {
+    const data = {
+      userId,
+      bookId,
+      text: commentText,
+      date: new Date().toISOString(),
+      type: 'comment'
     }
+    const res = await axios.post(ENDPOINTS.COMMENTS, data)
+    return res.data
   },
 
-  // ----------- ADMIN DASHBOARD FETCHERS -----------
+  async fetchComments(bookId) {
+    const res = await axios.get(ENDPOINTS.COMMENTS)
+    return res.data.filter((c) => c.bookId === bookId)
+  },
 
+  // Admin fetchers
   async fetchAllBooks() {
-    try {
-      const users = await this.fetchUsers()
-      return users.filter((u) => u.type === 'broughtBook' || u.type === 'borrowedBook')
-    } catch {
-      // fallback: merge all local user books
-      let all = []
-      Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith('broughtBooks_') || key.startsWith('borrowedBooks_')) {
-          all = all.concat(JSON.parse(localStorage.getItem(key) || '[]'))
-        }
-      })
-      return all
-    }
+   try{
+
+     const res = await axios.get(ENDPOINTS.BOOKS)
+     return res.data
+   }catch(err){
+    console.error('Error', err)
+  }
   },
 
   async fetchAllAppointments() {
-    try {
-      const users = await this.fetchUsers()
-      return users.filter((u) => u.type === 'appointment')
-    } catch {
-      let all = []
-      Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith('appointments_')) {
-          all = all.concat(JSON.parse(localStorage.getItem(key) || '[]'))
-        }
-      })
-      return all
-    }
+   try{
+
+     const res = await axios.get(ENDPOINTS.APPOINTMENTS)
+     return res.data
+   }catch(err){
+    console.error('Error', err)
+  }
   },
 
   async fetchAllTransactions() {
-    try {
-      const users = await this.fetchUsers()
-      return users.filter((u) => u.type === 'transaction')
-    } catch {
-      let all = []
-      Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith('transactionHistory_')) {
-          all = all.concat(JSON.parse(localStorage.getItem(key) || '[]'))
-        }
-      })
-      return all
-    }
+   try{
+
+     const res = await axios.get(ENDPOINTS.TRANSACTIONS)
+     return res.data
+   }catch(err){
+    console.error('Error', err)
+  }
   },
 
-  // Add these methods to your export default object
+  async fetchAllComments() {
+   try{
 
-  async addBook(book) {
-    // book.type should be 'broughtBook' or 'borrowedBook'
-    const response = await axios.post('https://683efaf01cd60dca33ddd10d.mockapi.io/users', book)
-    return response.data
-  },
+     const res = await axios.get(ENDPOINTS.COMMENTS)
+     return res.data
+   }catch(err){
+    console.error('Error', err)
+  }
 
-  async updateBook(id, book) {
-    const response = await axios.put(
-      `https://683efaf01cd60dca33ddd10d.mockapi.io/users/${id}`,
-      book,
-    )
-    return response.data
-  },
-
-  async deleteBook(id) {
-    const response = await axios.delete(`https://683efaf01cd60dca33ddd10d.mockapi.io/users/${id}`)
-    return response.data
   },
 }
