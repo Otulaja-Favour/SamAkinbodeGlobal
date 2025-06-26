@@ -90,10 +90,10 @@
                       class="btn btn-outline-secondary btn-sm"
                       @click="showCommentModal(book, idx, 'owned')"
                     >
-                      <i class="fas fa-comment"></i> 
+                      <i class="fas fa-comment"></i>
                     </button>
                     <button class="btn btn-outline-success btn-sm" @click="downloadBook(book)">
-                      <i class="fas fa-download"></i> 
+                      <i class="fas fa-download"></i>
                     </button>
                   </div>
                 </div>
@@ -121,7 +121,9 @@
         <!-- My Rentals -->
         <div v-else-if="dashboardTab === 'rentals'">
           <h4>My Rentals ({{ rentedBooks.length }})</h4>
-          <marquee behavior="scroll" direction="left">All borowed books are dued for two weeks.</marquee>
+          <marquee behavior="scroll" direction="left">
+            All borowed books are dued for two weeks.
+          </marquee>
           <div v-if="rentedBooks.length === 0" class="alert alert-info">No books rented yet.</div>
           <div class="row" v-else>
             <div class="col-md-4 mb-3" v-for="(book, idx) in rentedBooks" :key="book.id">
@@ -151,14 +153,14 @@
                       class="btn btn-outline-secondary btn-sm"
                       @click="showCommentModal(book, idx, 'rented')"
                     >
-                      <i class="fas fa-comment"></i> 
+                      <i class="fas fa-comment"></i>
                     </button>
                     <button
                       class="btn btn-outline-danger btn-sm"
                       @click="returnRentedBook(book.id, idx)"
                       disabled
                     >
-                      <i class="fas fa-undo"></i> 
+                      <i class="fas fa-undo"></i>
                     </button>
                   </div>
                 </div>
@@ -552,12 +554,34 @@ export default {
     },
     async returnRentedBook(bookId, idx) {
       try {
+        const bookToReturn = this.rentedBooks.find((book) => book.id === bookId)
+        if (!bookToReturn) {
+          toast.error('Book not found in rented books.')
+          return
+        }
+
         await mockstorage.returnBorrowedBook(bookId, this.user.id)
         this.rentedBooks.splice(idx, 1)
         localStorage.setItem(`borrowedBooks_${this.user.id}`, JSON.stringify(this.rentedBooks))
         clearInterval(this.countdownTimers[`interval_${bookId}`])
         delete this.countdownTimers[`interval_${bookId}`]
         delete this.countdownDisplays[bookId]
+
+        // Log the return transaction
+        const returnTransaction = {
+          title: bookToReturn.title,
+          price: 0, // No price for return
+          action: 'return',
+          date: new Date().toLocaleString(),
+          reference: `RETURN-${bookId}-${Date.now()}`,
+        }
+        this.transactionHistory.push(returnTransaction)
+        await mockstorage.saveTransactionHistory(this.user.id, [returnTransaction])
+        localStorage.setItem(
+          `transactionHistory_${this.user.id}`,
+          JSON.stringify(this.transactionHistory),
+        )
+
         toast.success('Book returned successfully!')
       } catch (error) {
         console.error('Error returning book:', error)
