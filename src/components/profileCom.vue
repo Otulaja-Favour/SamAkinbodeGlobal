@@ -2,320 +2,71 @@
   <div>
     <h3 class="m-3">My Profile</h3>
     <div class="container-fluid conc">
-      <!-- Sidebar -->
-      <aside class="asideBar">
-        <div
-          v-for="item in sidebarItems"
-          :key="item.tab"
-          @click="dashboardTab = item.tab"
-          class="sidebar-item"
-          :class="{ active: dashboardTab === item.tab }"
-        >
-          <i :class="item.icon"></i>
-          <span class="sidebar-label">{{ item.label }}</span>
-        </div>
-      </aside>
-
+      <!-- Sidebar Component -->
+      <DashboardSidebar 
+        :active-tab="dashboardTab" 
+        @tab-change="dashboardTab = $event" 
+      />
+      
       <!-- Main Content -->
       <section class="displayAside">
         <!-- Overview -->
-        <div v-if="dashboardTab === 'overview'">
-          <h4>Welcome back, {{ user.firstName || 'User' }}!</h4>
-          <div class="row mt-4">
-            <div class="col-md-3 mb-3">
-              <div class="card text-center clickable" @click="dashboardTab = 'books'">
-                <div class="card-body">
-                  <i class="fas fa-book fa-2x text-primary mb-2"></i>
-                  <h5 class="card-title">{{ ownedBooks.length }}</h5>
-                  <p class="card-text">Books Owned</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3 mb-3">
-              <div class="card text-center clickable" @click="dashboardTab = 'rentals'">
-                <div class="card-body">
-                  <i class="fas fa-book-reader fa-2x text-success mb-2"></i>
-                  <h5 class="card-title">{{ rentedBooks.length }}</h5>
-                  <p class="card-text">Books Rented</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3 mb-3">
-              <div class="card text-center clickable" @click="dashboardTab = 'transactions'">
-                <div class="card-body">
-                  <i class="fas fa-receipt fa-2x text-info mb-2"></i>
-                  <h5 class="card-title">{{ transactionHistory.length }}</h5>
-                  <p class="card-text">Total Transactions</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3 mb-3">
-              <div class="card text-center">
-                <div class="card-body">
-                  <i class="fas fa-layer-group fa-2x text-warning mb-2"></i>
-                  <h5 class="card-title">{{ totalBooks }}</h5>
-                  <p class="card-text">Total Books</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
+        <OverviewSection
+          v-if="dashboardTab === 'overview'"
+          :user="userData"
+          @tab-change="dashboardTab = $event"
+        />
+        
         <!-- My Books -->
-        <div v-else-if="dashboardTab === 'books'">
-          <h4>My Books ({{ ownedBooks.length }})</h4>
-          <div v-if="ownedBooks.length === 0" class="alert alert-info">No books owned yet.</div>
-          <div class="row" v-else>
-            <div class="col-md-4 mb-3" v-for="(book, idx) in ownedBooks" :key="book.id">
-              <div class="card h-100 position-relative">
-                <i
-                  v-if="isBookRead(book.id)"
-                  class="fas fa-check-circle text-success position-absolute top-0 end-0 m-2"
-                ></i>
-                <img
-                  v-if="book.image"
-                  :src="book.image"
-                  class="card-img-top"
-                  style="height: 180px; object-fit: cover"
-                />
-                <div class="card-body">
-                  <h5 class="card-title">{{ book.title }}</h5>
-                  <p class="card-text">{{ book.author }}</p>
-                  <span class="badge bg-primary">Owned</span>
-                  <div class="d-flex align-items-center mt-2 gap-2">
-                    <button class="btn btn-outline-primary btn-sm" @click="viewBook(book)">
-                      <i class="fas fa-eye"></i> Read
-                    </button>
-                    <button
-                      class="btn btn-outline-secondary btn-sm"
-                      @click="showCommentModal(book, idx, 'owned')"
-                    >
-                      <i class="fas fa-comment"></i>
-                    </button>
-                    <button class="btn btn-outline-success btn-sm" @click="downloadBook(book)">
-                      <i class="fas fa-download"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- Reading Section: Displays PDF for both owned and rented books -->
-          <div v-if="selectedBook" class="reading-section mt-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5>Reading: {{ selectedBook.title }}</h5>
-              <button class="btn btn-outline-danger btn-sm" @click="closeReadingView">
-                <i class="fas fa-times"></i> Close Reading View
-              </button>
-            </div>
-            <iframe
-              v-if="selectedBook.pdfUrl"
-              :src="selectedBook.pdfUrl"
-              class="book-iframe"
-              frameborder="0"
-            ></iframe>
-            <div v-else class="alert alert-warning">No PDF available for this book.</div>
-          </div>
-        </div>
-
+        <BooksSection
+          v-else-if="dashboardTab === 'books'"
+          :books="userData.broughtBooks || []"
+          type="owned"
+          :read-books="readBooks"
+          :selected-book="selectedBook"
+          @view-book="viewBook"
+          @show-comment="showCommentModal"
+          @download-book="downloadBook"
+          @close-reading="closeReadingView"
+        />
+        
         <!-- My Rentals -->
-        <div v-else-if="dashboardTab === 'rentals'">
-          <h4>My Rentals ({{ rentedBooks.length }})</h4>
-          <marquee behavior="scroll" direction="left">
-            All borowed books are dued for two weeks.
-          </marquee>
-          <div v-if="rentedBooks.length === 0" class="alert alert-info">No books rented yet.</div>
-          <div class="row" v-else>
-            <div class="col-md-4 mb-3" v-for="(book, idx) in rentedBooks" :key="book.id">
-              <div class="card h-100 position-relative">
-                <i
-                  v-if="isBookRead(book.id)"
-                  class="fas fa-check-circle text-success position-absolute top-0 end-0 m-2"
-                ></i>
-                <img
-                  v-if="book.image"
-                  :src="book.image"
-                  class="card-img-top"
-                  style="height: 180px; object-fit: cover"
-                />
-                <div class="card-body">
-                  <h5 class="card-title">{{ book.title }}</h5>
-                  <p class="card-text">{{ book.author }}</p>
-                  <span class="badge bg-success">Rented</span>
-                  <div class="mt-2">
-                    <span class="badge bg-info">Return in: {{ getCountdown(book.id) }}</span>
-                  </div>
-                  <div class="d-flex align-items-center mt-2 gap-2">
-                    <button class="btn btn-outline-primary btn-sm" @click="viewBook(book)">
-                      <i class="fas fa-eye"></i> Read
-                    </button>
-                    <button
-                      class="btn btn-outline-secondary btn-sm"
-                      @click="showCommentModal(book, idx, 'rented')"
-                    >
-                      <i class="fas fa-comment"></i>
-                    </button>
-                    <button
-                      class="btn btn-outline-danger btn-sm"
-                      @click="returnRentedBook(book.id, idx)"
-                      disabled
-                    >
-                      <i class="fas fa-undo"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- Reading Section: Repeated for rentals to ensure visibility -->
-          <div v-if="selectedBook && dashboardTab === 'rentals'" class="reading-section mt-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5>Reading: {{ selectedBook.title }}</h5>
-              <button class="btn btn-outline-danger btn-sm" @click="closeReadingView">
-                <i class="fas fa-times"></i> Close Reading View
-              </button>
-            </div>
-            <iframe
-              v-if="selectedBook.pdfUrl"
-              :src="selectedBook.pdfUrl"
-              class="book-iframe"
-              frameborder="0"
-            ></iframe>
-            <div v-else class="alert alert-warning">No PDF available for this book.</div>
-          </div>
-        </div>
-
+        <BooksSection
+          v-else-if="dashboardTab === 'rentals'"
+          :books="userData.borrowedBooks || []"
+          type="rented"
+          :read-books="readBooks"
+          :selected-book="selectedBook"
+          :countdown-displays="countdownDisplays"
+          @view-book="viewBook"
+          @show-comment="showCommentModal"
+          @return-book="returnRentedBook"
+          @close-reading="closeReadingView"
+        />
+        
         <!-- Transactions -->
-        <div v-else-if="dashboardTab === 'transactions'">
-          <h4>Transaction History</h4>
-          <div v-if="transactionHistory.length === 0" class="alert alert-info">
-            No transactions yet.
-          </div>
-          <div class="table-responsive" v-else>
-            <table class="table table-bordered">
-              <thead>
-                <tr>
-                  <th>Book</th>
-                  <th>Type</th>
-                  <th>Amount</th>
-                  <th>Date</th>
-                  <th>Reference</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(tx, idx) in transactionHistory" :key="tx.id">
-                  <td>{{ tx.title }}</td>
-                  <td class="text-capitalize">{{ tx.action === 'buy' ? 'Bought' : 'Rented' }}</td>
-                  <td>₦{{ tx.price }}</td>
-                  <td>{{ tx.date }}</td>
-                  <td>{{ tx.reference }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
+        <TransactionsSection
+          v-else-if="dashboardTab === 'transactions'"
+          :transaction-history="userData.transactionHistory || []"
+        />
+        
         <!-- Appointments -->
-        <div v-else-if="dashboardTab === 'appointments'">
-          <h4>Appointments</h4>
-          <button class="btn btn-primary mb-3" @click="showAppointmentModal = true">
-            <i class="fas fa-calendar-plus"></i> Create Appointment
-          </button>
-          <div v-if="appointments.length === 0" class="alert alert-info">No appointments yet.</div>
-          <ul class="list-group" v-else>
-            <li class="list-group-item" v-for="(app, idx) in appointments" :key="app.id">
-              <strong>{{ app.subject }}</strong> - {{ app.details }}
-              <span class="text-muted">({{ app.date }})</span>
-            </li>
-          </ul>
-          <!-- Appointment Modal -->
-          <div
-            v-if="showAppointmentModal"
-            class="custom-modal-backdrop"
-            @click.self="showAppointmentModal = false"
-          >
-            <div class="custom-modal">
-              <div class="modal-header">
-                <h5 class="modal-title">Create Appointment</h5>
-                <button
-                  type="button"
-                  class="btn-close"
-                  @click="showAppointmentModal = false"
-                ></button>
-              </div>
-              <div class="modal-body">
-                <form @submit.prevent="submitAppointment">
-                  <div class="mb-3">
-                    <label class="form-label">Subject</label>
-                    <input
-                      v-model="appointment.subject"
-                      type="text"
-                      class="form-control"
-                      required
-                    />
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Details</label>
-                    <textarea
-                      v-model="appointment.details"
-                      class="form-control"
-                      required
-                    ></textarea>
-                  </div>
-                  <button class="btn btn-success" type="submit" :disabled="appointmentLoading">
-                    <span v-if="appointmentLoading" class="spinner-border spinner-border-sm"></span>
-                    <span v-else>Send</span>
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-
+        <AppointmentsSection
+          v-else-if="dashboardTab === 'appointments'"
+          :appointments="userData.appointments || []"
+          @appointment-created="handleAppointmentCreated"
+        />
+        
         <!-- Settings -->
-        <div v-else-if="dashboardTab === 'settings'">
-          <h4>Settings</h4>
-          <form @submit.prevent="saveSettings" class="mt-3" style="max-width: 400px">
-            <div class="mb-3">
-              <label class="form-label">First Name</label>
-              <input v-model="user.firstName" type="text" class="form-control" required />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Email</label>
-              <input v-model="user.email" type="email" class="form-control" required />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Age</label>
-              <input v-model="user.Age" type="number" class="form-control" />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Phone Number</label>
-              <input v-model="user.phoneNumber" type="tel" class="form-control" />
-            </div>
-            <button class="btn btn-primary" type="submit" :disabled="settingsLoading">
-              <span v-if="settingsLoading" class="spinner-border spinner-border-sm"></span>
-              <span v-else>Save Changes</span>
-            </button>
-          </form>
-          <div class="mt-4">
-            <h6>Your Details:</h6>
-            <p><strong>Name:</strong> {{ user.firstName || 'Not set' }}</p>
-            <p><strong>Email:</strong> {{ user.email || 'Not set' }}</p>
-            <p><strong>Age:</strong> {{ user.Age || 'Not set' }}</p>
-            <p><strong>Phone Number:</strong> {{ user.phoneNumber || 'Not set' }}</p>
-          </div>
-          <div class="mt-4">
-            <h6>Your Comments:</h6>
-            <div v-if="userComments.length === 0" class="alert alert-info">No comments yet.</div>
-            <ul class="list-group" style="height: 160px; overflow-y: scroll" v-else>
-              <li class="list-group-item" v-for="(comment, idx) in userComments" :key="idx">
-                <strong>{{ comment.bookTitle }}</strong
-                >: {{ comment.comment }}
-              </li>
-            </ul>
-          </div>
-        </div>
-
+        <SettingsSection
+          v-else-if="dashboardTab === 'settings'"
+          :user="userData"
+          :user-comments="userData.comments || []"
+          :settings-loading="settingsLoading"
+          @save-settings="saveSettings"
+          @update-user="updateUserData"
+        />
+        
         <!-- Comment Modal -->
         <div v-if="showComment" class="custom-modal-backdrop" @click.self="closeCommentModal">
           <div class="custom-modal">
@@ -333,10 +84,10 @@
                 <span v-if="commentLoading" class="spinner-border spinner-border-sm"></span>
                 <span v-else>Submit</span>
               </button>
-              <div v-if="currentBook.comments && currentBook.comments.length" class="mt-3">
+              <div v-if="currentBookComments.length" class="mt-3">
                 <div class="fw-bold">Comments:</div>
                 <ul class="list-unstyled mb-0">
-                  <li v-for="(c, i) in currentBook.comments" :key="i" class="small">{{ c }}</li>
+                  <li v-for="(c, i) in currentBookComments" :key="i" class="small">{{ c.text }}</li>
                 </ul>
               </div>
             </div>
@@ -344,6 +95,7 @@
         </div>
       </section>
     </div>
+    
     <footer
       class="text-white text-center footer"
       style="background-color: #2c3e50; padding: 40px 0px"
@@ -356,36 +108,50 @@
 </template>
 
 <script>
+import DashboardSidebar from '@/components/sidebar.vue'
+import OverviewSection from '@/components/overview.vue'
+import BooksSection from '@/components/mybook.vue'
+import TransactionsSection from '@/components/mytransavtion.vue'
+import AppointmentsSection from '@/components/appiontment.vue'
+import SettingsSection from '@/components/setting.vue'
 import mockstorage from '@/stores/mockstorage'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 
 export default {
+  name: 'UserDashboard',
+  components: {
+    DashboardSidebar,
+    OverviewSection,
+    BooksSection,
+    TransactionsSection,
+    AppointmentsSection,
+    SettingsSection
+  },
+  
   data() {
     return {
       dashboardTab: 'overview',
-      sidebarItems: [
-        { tab: 'overview', label: 'Overview', icon: 'fas fa-chart-bar' },
-        { tab: 'books', label: 'My Books', icon: 'fas fa-book' },
-        { tab: 'rentals', label: 'My Rentals', icon: 'fas fa-calendar-alt' },
-        { tab: 'transactions', label: 'Transactions', icon: 'fas fa-receipt' },
-        { tab: 'appointments', label: 'Appointments', icon: 'fas fa-calendar-plus' },
-        { tab: 'settings', label: 'Settings', icon: 'fas fa-cog' },
-      ],
-      user: { firstName: '', email: '', Age: null, phoneNumber: '' },
-      ownedBooks: [],
-      rentedBooks: [],
-      transactionHistory: [],
-      appointments: [],
+      userData: {
+        id: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        age: "",
+        phoneNumber: "",
+        role: "user",
+        appointments: [],
+        borrowedBooks: [],
+        broughtBooks: [],
+        comments: [],
+        transactionHistory: []
+      },
       showComment: false,
       commentText: '',
       currentBook: {},
       currentBookIdx: null,
       currentBookType: '',
-      showAppointmentModal: false,
-      appointment: { subject: '', details: '' },
       commentLoading: false,
-      appointmentLoading: false,
       settingsLoading: false,
       selectedBook: null,
       countdownTimers: {},
@@ -393,90 +159,83 @@ export default {
       readBooks: new Set(),
     }
   },
-  computed: {
-    totalBooks() {
-      return this.ownedBooks.length + this.rentedBooks.length
-    },
-    userComments() {
-      const comments = []
-      ;[...this.ownedBooks, ...this.rentedBooks].forEach((book) => {
-        if (book.comments && book.comments.length) {
-          book.comments.forEach((comment) => {
-            comments.push({ bookTitle: book.title, comment })
-          })
-        }
-      })
-      return comments
-    },
-  },
-  async mounted() {
-    const userId = localStorage.getItem('userId')
-    if (!userId) {
-      toast.error('No user logged in. Please log in.')
-      this.$router.push('/login')
-      return
-    }
 
-    try {
-      const user = await mockstorage.fetchUser(userId)
-      if (!user) {
-        toast.error('User not found. Please log in again.')
-        this.$router.push('/login')
-        return
-      }
-      this.user = { ...user, Age: user.Age || null, phoneNumber: user.phoneNumber || '' }
-      this.ownedBooks = await mockstorage.fetchBroughtBooks(userId)
-      this.rentedBooks = await mockstorage.fetchBorrowedBooks(userId)
-      this.transactionHistory = await mockstorage.fetchTransactionHistory(userId)
-      this.appointments = await mockstorage.fetchAppointments(userId)
-      localStorage.setItem(`broughtBooks_${userId}`, JSON.stringify(this.ownedBooks))
-      localStorage.setItem(`borrowedBooks_${userId}`, JSON.stringify(this.rentedBooks))
-      localStorage.setItem(`transactionHistory_${userId}`, JSON.stringify(this.transactionHistory))
-      localStorage.setItem(`appointments_${userId}`, JSON.stringify(this.appointments))
-      const readBooks = JSON.parse(localStorage.getItem(`readBooks_${userId}`) || '[]')
-      this.readBooks = new Set(readBooks)
-      this.rentedBooks.forEach((book, idx) => {
-        if (book.rentalDate) {
-          this.scheduleAutoReturn(book, idx)
-        } else {
-          // If rentalDate is missing, set it to now and update storage
-          book.rentalDate = new Date().toISOString()
-          this.updateRentalDate(book, idx)
-          this.scheduleAutoReturn(book, idx)
-        }
-      })
-      toast.success('Profile data loaded successfully!')
-    } catch (error) {
-      console.error('Error fetching data:', error)
-      toast.error('Failed to fetch data. Using local data.')
-      const userId = localStorage.getItem('userId')
-      this.ownedBooks = JSON.parse(localStorage.getItem(`broughtBooks_${userId}`) || '[]')
-      this.rentedBooks = JSON.parse(localStorage.getItem(`borrowedBooks_${userId}`) || '[]')
-      this.transactionHistory = JSON.parse(
-        localStorage.getItem(`transactionHistory_${userId}`) || '[]',
-      )
-      this.appointments = JSON.parse(localStorage.getItem(`appointments_${userId}`) || '[]')
-      const readBooks = JSON.parse(localStorage.getItem(`readBooks_${userId}`) || '[]')
-      this.readBooks = new Set(readBooks)
-      this.rentedBooks.forEach((book, idx) => {
-        if (book.rentalDate) {
-          this.scheduleAutoReturn(book, idx)
-        } else {
-          book.rentalDate = new Date().toISOString()
-          this.updateRentalDate(book, idx)
-          this.scheduleAutoReturn(book, idx)
-        }
-      })
+  computed: {
+    currentBookComments() {
+      const bookId = this.currentBook.bookId || this.currentBook.id
+      return this.userData.comments?.filter(comment => comment.bookId === bookId) || []
     }
   },
-  beforeDestroy() {
-    Object.values(this.countdownTimers).forEach(clearInterval)
+
+  async mounted() {
+    await this.loadUserData()
+    this.setupRentalTimers()
+    
+    // Listen for user data updates
+    window.addEventListener('user-data-updated', this.handleUserDataUpdate)
   },
+
+  beforeUnmount() {
+    Object.values(this.countdownTimers).forEach(clearInterval)
+    window.removeEventListener('user-data-updated', this.handleUserDataUpdate)
+  },
+
   methods: {
+    async loadUserData() {
+      try {
+        // Get user data from session storage
+        const userDataStr = sessionStorage.getItem('userData')
+        if (!userDataStr) {
+          toast.error('Please login to view profile')
+          this.$router.push('/')
+          return
+        }
+
+        const sessionUserData = JSON.parse(userDataStr)
+        
+        // Fetch fresh data from server
+        const freshUserData = await mockstorage.fetchUser(sessionUserData.id)
+        if (freshUserData) {
+          this.userData = freshUserData
+          // Update session storage with fresh data
+          sessionStorage.setItem('userData', JSON.stringify(freshUserData))
+        } else {
+          this.userData = sessionUserData
+        }
+
+        // Load read books from session storage
+        const readBooksKey = `readBooks_${this.userData.id}`
+        const readBooks = JSON.parse(sessionStorage.getItem(readBooksKey) || '[]')
+        this.readBooks = new Set(readBooks)
+
+        toast.success('Profile data loaded successfully!')
+      } catch (error) {
+        console.error('Error loading user data:', error)
+        toast.error('Failed to load user data')
+      }
+    },
+
+    handleUserDataUpdate(event) {
+      if (event.detail) {
+        this.userData = event.detail
+        sessionStorage.setItem('userData', JSON.stringify(event.detail))
+      }
+    },
+
+    setupRentalTimers() {
+      this.userData.borrowedBooks?.forEach((book, idx) => {
+        if (book.borrowDate) {
+          this.scheduleAutoReturn(book, idx)
+        }
+      })
+    },
+
     async saveSettings() {
       this.settingsLoading = true
       try {
-        await mockstorage.saveUser({ ...this.user, id: this.user.id })
+        const updatedUser = await mockstorage.updateUser(this.userData.id, this.userData)
+        this.userData = updatedUser
+        sessionStorage.setItem('userData', JSON.stringify(updatedUser))
         toast.success('Profile updated successfully!')
       } catch (error) {
         console.error('Error saving settings:', error)
@@ -485,16 +244,24 @@ export default {
         this.settingsLoading = false
       }
     },
+
+    updateUserData(newUserData) {
+      this.userData = { ...this.userData, ...newUserData }
+    },
+
     viewBook(book) {
       this.selectedBook = book
-      this.readBooks.add(book.id)
-      localStorage.setItem(`readBooks_${this.user.id}`, JSON.stringify([...this.readBooks]))
+      const bookId = book.bookId || book.id
+      this.readBooks.add(bookId)
+      sessionStorage.setItem(`readBooks_${this.userData.id}`, JSON.stringify([...this.readBooks]))
       toast.success(`Opened ${book.title} for reading`)
     },
+
     closeReadingView() {
       this.selectedBook = null
       toast.success('Closed reading view')
     },
+
     downloadBook(book) {
       if (!book.pdfUrl) {
         toast.error('No PDF available for this book.')
@@ -508,7 +275,8 @@ export default {
       document.body.removeChild(link)
       toast.success(`Downloading ${book.title}`)
     },
-    showCommentModal(book, idx, type) {
+
+    showCommentModal({ book, idx, type }) {
       this.currentBook = { ...book }
       this.currentBookIdx = idx
       this.currentBookType = type
@@ -516,6 +284,7 @@ export default {
       this.showComment = true
       toast.info(`Opened comment modal for ${book.title}`)
     },
+
     closeCommentModal() {
       this.showComment = false
       this.currentBook = {}
@@ -524,25 +293,21 @@ export default {
       this.commentText = ''
       toast.info('Closed comment modal')
     },
+
     async addCommentToBook() {
       if (!this.commentText) {
         toast.error('Comment cannot be empty.')
         return
       }
+      
       this.commentLoading = true
       try {
-        const comments = this.currentBook.comments
-          ? [...this.currentBook.comments, this.commentText]
-          : [this.commentText]
-        await mockstorage.saveBookComment(this.currentBook.id, comments)
-        this.currentBook.comments = comments
-        if (this.currentBookType === 'owned') {
-          this.ownedBooks[this.currentBookIdx] = { ...this.currentBook }
-        } else if (this.currentBookType === 'rented') {
-          this.rentedBooks[this.currentBookIdx] = { ...this.currentBook }
-        }
-        localStorage.setItem(`broughtBooks_${this.user.id}`, JSON.stringify(this.ownedBooks))
-        localStorage.setItem(`borrowedBooks_${this.user.id}`, JSON.stringify(this.rentedBooks))
+        const bookId = this.currentBook.bookId || this.currentBook.id
+        await mockstorage.saveComment(this.userData.id, bookId, this.commentText)
+        
+        // Refresh user data to get updated comments
+        await this.loadUserData()
+        
         toast.success('Comment added successfully!')
         this.closeCommentModal()
       } catch (error) {
@@ -552,116 +317,92 @@ export default {
         this.commentLoading = false
       }
     },
-    async returnRentedBook(bookId, idx) {
+
+    async returnRentedBook({ bookId, idx }) {
       try {
-        const bookToReturn = this.rentedBooks.find((book) => book.id === bookId)
+        const bookToReturn = this.userData.borrowedBooks.find((book) => (book.bookId || book.id) === bookId)
         if (!bookToReturn) {
           toast.error('Book not found in rented books.')
           return
         }
 
-        await mockstorage.returnBorrowedBook(bookId, this.user.id)
-        this.rentedBooks.splice(idx, 1)
-        localStorage.setItem(`borrowedBooks_${this.user.id}`, JSON.stringify(this.rentedBooks))
+        // Remove from borrowed books
+        this.userData.borrowedBooks.splice(idx, 1)
+        
+        // Clear countdown timer
         clearInterval(this.countdownTimers[`interval_${bookId}`])
         delete this.countdownTimers[`interval_${bookId}`]
         delete this.countdownDisplays[bookId]
 
-        // Log the return transaction
-        const returnTransaction = {
-          title: bookToReturn.title,
-          price: 0, // No price for return
-          action: 'return',
-          date: new Date().toLocaleString(),
-          reference: `RETURN-${bookId}-${Date.now()}`,
-        }
-        this.transactionHistory.push(returnTransaction)
-        await mockstorage.saveTransactionHistory(this.user.id, [returnTransaction])
-        localStorage.setItem(
-          `transactionHistory_${this.user.id}`,
-          JSON.stringify(this.transactionHistory),
-        )
-
+        // Update user data on server
+        await mockstorage.updateUser(this.userData.id, this.userData)
+        
         toast.success('Book returned successfully!')
       } catch (error) {
         console.error('Error returning book:', error)
         toast.error('Failed to return book.')
       }
     },
-    async submitAppointment() {
-      this.appointmentLoading = true
+
+    async handleAppointmentCreated(newApp) {
       try {
-        const newApp = {
-          ...this.appointment,
-          userId: this.user.id,
-          date: new Date().toLocaleString(),
-          type: 'appointment',
-        }
-        await mockstorage.saveAppointment(this.user.id, newApp)
-        this.appointments.push(newApp)
-        localStorage.setItem(`appointments_${this.user.id}`, JSON.stringify(this.appointments))
+        await mockstorage.saveAppointment(this.userData.id, newApp)
+        // Refresh user data to get updated appointments
+        await this.loadUserData()
         toast.success('Appointment created successfully!')
-        this.showAppointmentModal = false
-        this.appointment = { subject: '', details: '' }
       } catch (error) {
         console.error('Error creating appointment:', error)
         toast.error('Failed to create appointment.')
-      } finally {
-        this.appointmentLoading = false
       }
     },
-    // Ensure rentalDate is set and update storage
-    async updateRentalDate(book, idx) {
-      book.rentalDate = new Date().toISOString()
-      this.rentedBooks[idx] = { ...book }
-      await mockstorage.saveBorrowedBooks(this.user.id, [book])
-      localStorage.setItem(`borrowedBooks_${this.user.id}`, JSON.stringify(this.rentedBooks))
-    },
-    // Schedules auto-return and timer for a rented book (2 weeks)
+
     scheduleAutoReturn(book, idx) {
-      if (!book.rentalDate) {
-        book.rentalDate = new Date().toISOString()
-        this.updateRentalDate(book, idx)
+      const bookId = book.bookId || book.id
+      if (!book.borrowDate) {
+        book.borrowDate = new Date().toISOString()
       }
-      const rentalDate = new Date(book.rentalDate)
-      const returnDate = new Date(rentalDate.getTime() + 14 * 24 * 60 * 60 * 1000) // 2 weeks
+
+      const borrowDate = new Date(book.borrowDate)
+      const returnDate = new Date(borrowDate.getTime() + 14 * 24 * 60 * 60 * 1000)
       const now = new Date()
       const timeUntilReturn = returnDate.getTime() - now.getTime()
 
-      // Only schedule auto-return if time is in the future
       if (timeUntilReturn > 0) {
-        if (this.countdownTimers[book.id]) clearTimeout(this.countdownTimers[book.id])
-        this.countdownTimers[book.id] = setTimeout(() => {
-          const idxNow = this.rentedBooks.findIndex((b) => b.id === book.id)
+        if (this.countdownTimers[bookId]) clearTimeout(this.countdownTimers[bookId])
+        this.countdownTimers[bookId] = setTimeout(() => {
+          const idxNow = this.userData.borrowedBooks.findIndex((b) => (b.bookId || b.id) === bookId)
           if (idxNow !== -1) {
-            this.returnRentedBook(book.id, idxNow)
+            this.returnRentedBook({ bookId, idx: idxNow })
             toast.info(`Book "${book.title}" auto-returned after 2 weeks`)
           }
         }, timeUntilReturn)
       }
-      // Always start the countdown display
-      this.startCountdown(book.id)
+
+      this.startCountdown(bookId)
     },
-    // Start countdown timer for a rented book
+
     startCountdown(bookId) {
       if (this.countdownTimers[`interval_${bookId}`])
         clearInterval(this.countdownTimers[`interval_${bookId}`])
+
       this.countdownTimers[`interval_${bookId}`] = setInterval(() => {
         this.updateCountdown(bookId)
       }, 1000)
+
       this.updateCountdown(bookId)
     },
-    // Update countdown display for a rented book
+
     updateCountdown(bookId) {
-      const book = this.rentedBooks.find((b) => b.id === bookId)
-      if (!book || !book.rentalDate) {
+      const book = this.userData.borrowedBooks?.find((b) => (b.bookId || b.id) === bookId)
+      if (!book || !book.borrowDate) {
         clearInterval(this.countdownTimers[`interval_${bookId}`])
         delete this.countdownTimers[`interval_${bookId}`]
         this.countdownDisplays[bookId] = 'No timer'
         return
       }
-      const rentalDate = new Date(book.rentalDate)
-      const returnDate = new Date(rentalDate.getTime() + 14 * 24 * 60 * 60 * 1000) // 2 weeks
+
+      const borrowDate = new Date(book.borrowDate)
+      const returnDate = new Date(borrowDate.getTime() + 14 * 24 * 60 * 60 * 1000)
       const now = new Date()
       const timeLeft = returnDate.getTime() - now.getTime()
 
@@ -676,15 +417,10 @@ export default {
       const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
       const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60))
       const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000)
+
       this.countdownDisplays[bookId] = `${days}d ${hours}h ${minutes}m ${seconds}s`
-    },
-    getCountdown(bookId) {
-      return this.countdownDisplays[bookId] || 'No timer'
-    },
-    isBookRead(bookId) {
-      return this.readBooks.has(bookId)
-    },
-  },
+    }
+  }
 }
 </script>
 
@@ -696,15 +432,7 @@ export default {
   justify-content: space-evenly;
   gap: 20px;
 }
-.asideBar {
-  width: 250px;
-  min-width: 180px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  background: #fafbfc;
-  padding: 10px;
-  height: fit-content;
-}
+
 .displayAside {
   flex: 1;
   border: 1px solid #eee;
@@ -713,39 +441,7 @@ export default {
   padding: 24px;
   min-height: 300px;
 }
-.sidebar-item {
-  margin: 0px 8px;
-  padding: 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 500;
-  transition:
-    background 0.2s,
-    color 0.2s;
-}
-.sidebar-item.active,
-.sidebar-item:hover {
-  background: #0d6efd;
-  color: #fff;
-}
-.sidebar-item i {
-  min-width: 20px;
-  font-size: 1.1rem;
-}
-.sidebar-label {
-  display: inline-block;
-  transition: all 0.2s;
-}
-.clickable {
-  cursor: pointer;
-  transition: box-shadow 0.2s;
-}
-.clickable:hover {
-  box-shadow: 0 2px 12px rgba(13, 110, 253, 0.15);
-}
+
 .custom-modal-backdrop {
   position: fixed;
   z-index: 1000;
@@ -759,6 +455,7 @@ export default {
   align-items: center;
   justify-content: center;
 }
+
 .custom-modal {
   background: #fff;
   border-radius: 10px;
@@ -769,6 +466,7 @@ export default {
   position: relative;
   z-index: 2100;
 }
+
 .btn-close {
   border: none;
   background: transparent;
@@ -778,83 +476,16 @@ export default {
   top: 12px;
   cursor: pointer;
 }
-.reading-section {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 70vw;
-  height: 90vh;
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  z-index: 100;
-}
-.book-iframe {
-  width: 100%;
-  height: 76vh;
-  border: none;
-  border-radius: 4px;
-  overflow-y: scroll;
-}
+
 @media (max-width: 900px) {
   .conc {
     flex-direction: column;
     gap: 0;
   }
-  .asideBar {
-    width: 100%;
-    min-width: unset;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: stretch;
-    padding: 0;
-    border-radius: 0;
-    border-right: none;
-    border-bottom: 1px solid #eee;
-    background: #fafbfc;
-    padding-bottom: 0;
-  }
-  .sidebar-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin: 0px;
-    padding: 10px 4px;
-    gap: 0;
-    border-radius: 0;
-    font-size: 0.95rem;
-    width: 100%;
-    min-width: unset;
-    flex: 1;
-  }
-  .sidebar-label {
-    display: none;
-    font-size: 0.8rem;
-    margin-top: 3px;
-    text-align: center;
-  }
   .displayAside {
     width: 100%;
     min-height: 100px;
     border-radius: 0 0 8px 8px;
-  }
-  .reading-section {
-    position: fixed;
-    top: 10px;
-    height: 80vh;
-    width: 90%;
-    /* left: auto; */
-    transform: translateX(-50%);
-  }
-  .book-iframe {
-    height: 60vh;
-
-    overflow-y: auto;
   }
 }
 </style>

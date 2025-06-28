@@ -55,7 +55,7 @@
                 Buy: ₦{{ book.price }}
                 <span class="card-text fw-bold">Rent: ₦{{ book.rent }}</span>
               </p>
-              <button class="btn btn-primary btn-sm mt-2" style="width: 90%; margin: 0 auto ; display: flex; justify-content: center;" @click="openModal(book)">View</button>
+              <button class="btn btn-primary btn-sm mt-2" style="width: 90%; margin: 0 auto; display: flex; justify-content: center;" @click="openModal(book)">View</button>
             </div>
           </div>
         </div>
@@ -143,7 +143,7 @@
 
     <div v-if="showModal" class="modal-backdrop fade show"></div>
   </div>
-  <footer class="text-white text-center  footer" style="background-color: #2c3e50; padding: 40px 0px; ">
+  <footer class="text-white text-center footer" style="background-color: #2c3e50; padding: 40px 0px;">
     <div class="container">
       <p class="mb-0">© 2025 Library Management System. All rights reserved.</p>
     </div>
@@ -165,11 +165,12 @@ export default {
       pageSize: 10,
       showModal: false,
       selectedBook: {},
-      cart: JSON.parse(localStorage.getItem('cart') || '[]'),
+      cart: [],
       cartCount: 0,
       loading: true,
       search: '',
       sortBy: '',
+      userId: null,
     }
   },
 
@@ -215,7 +216,7 @@ export default {
   methods: {
     loadCart() {
       try {
-        const savedCart = localStorage.getItem('cart')
+        const savedCart = sessionStorage.getItem('cart')
         if (savedCart) {
           this.cart = JSON.parse(savedCart)
           this.cartCount = this.cart.length
@@ -228,11 +229,23 @@ export default {
       }
     },
 
+    async syncCart() {
+      if (!this.userId) return
+      try {
+        await mockstorage.saveUserCart(this.userId, this.cart)
+      } catch (error) {
+        console.error('Failed to sync cart:', error)
+        this.showToast('Failed to sync cart with server', true)
+      }
+    },
+
     saveCart() {
       try {
-        localStorage.setItem('cart', JSON.stringify(this.cart))
+        sessionStorage.setItem('cart', JSON.stringify(this.cart))
+        this.syncCart()
       } catch (error) {
         console.error('Failed to save cart:', error)
+        this.showToast('Failed to save cart', true)
       }
     },
 
@@ -245,14 +258,19 @@ export default {
       window.dispatchEvent(new CustomEvent('cart-updated', { 
         detail: this.cartCount 
       }))
-      this.saveCart()
     },
 
-    addToCart(book, type) {
+    async addToCart(book, type) {
       if (!book?.id) {
         this.showToast('Invalid book data', true)
         return
       }
+
+      // if (!this.userId) {
+      //   this.showToast('Please login to add items to cart', true)
+      //   this.$router.push('/')
+      //   return
+      // }
 
       if (this.isInCart(book, type === 'buy' ? 'borrow' : 'buy')) {
         this.showToast(
@@ -308,6 +326,24 @@ export default {
       }
     },
 
+    async fetchUser() {
+      try {
+        const user = await mockstorage.getCurrentUser()
+        this.userId = user?.id || null
+        if (this.userId) {
+          const serverCart = await mockstorage.getUserCart(this.userId)
+          if (serverCart?.length) {
+            this.cart = serverCart
+            this.saveCart()
+            this.updateCartIcon()
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch user:', error)
+        this.showToast('Failed to load user data', true)
+      }
+    },
+
     showToast(message, isError = false) {
       const toast = document.createElement('div')
       toast.textContent = message
@@ -347,7 +383,7 @@ export default {
 
   async created() {
     this.loadCart()
-    await this.fetchBooks()
+    await Promise.all([this.fetchBooks(), this.fetchUser()])
     window.addEventListener('cart-updated', this.handleCartUpdate)
   },
 

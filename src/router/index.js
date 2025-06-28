@@ -44,15 +44,15 @@ const router = createRouter({
       path: '/admin',
       name: 'admin',
       component: () => import('../views/admin.vue'),
-      meta: { requiresAuth: true }, // Mark route as protected
+      // meta: { requiresAuth: true }, // Mark route as protected
     },
   ],
 })
 
 // Global navigation guard
 router.beforeEach((to, from, next) => {
-  const userId = localStorage.getItem('userId')
-  const adminEmail = localStorage.getItem('adminEmail')
+  const userId = sessionStorage.getItem('userId')
+  const adminEmail = sessionStorage.getItem('adminEmail')
 
   // Only allow admin to access /admin
   if (to.path === '/admin') {

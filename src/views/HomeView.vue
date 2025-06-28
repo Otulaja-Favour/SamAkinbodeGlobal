@@ -30,7 +30,6 @@
               <div class="carousel-item active">
                 <img src="../assets/images/jag.jpg" class="d-block w-100" alt="..." />
               </div>
-
               <div class="carousel-item">
                 <img src="../assets/images/jay.jpg" class="d-block w-100" alt="..." />
               </div>
@@ -63,7 +62,7 @@
       <transition name="slide-right">
         <div class="authentications" v-if="showPage">
           <h3 class="text-center py-4" v-if="isLogin">Welcome back</h3>
-          <h3 class="text-center py-4" v-else>Join site name</h3>
+          <h3 class="text-center py-4" v-else>Join Library Management System</h3>
           <div class="loginAspect">
             <template v-if="isLogin">
               <label for="email" class="form-label">Email</label>
@@ -93,7 +92,7 @@
                 @click="validateLogin"
                 :disabled="isSubmitting"
               >
-                Login
+                {{ isSubmitting ? 'Logging in...' : 'Login' }}
               </button>
               <p class="text-center">
                 Don't have an account?
@@ -101,11 +100,11 @@
               </p>
             </template>
             <template v-else>
-              <label for="FirstName" class="form-label">First Name</label>
+              <label for="firstName" class="form-label">First Name</label>
               <input
                 type="text"
                 class="form-control form-control-lg"
-                id="FirstName"
+                id="firstName"
                 placeholder="Enter first name"
                 v-model="firstName"
                 @input="validateField('firstName')"
@@ -165,16 +164,14 @@
                 v-model="confirmpassword"
                 @input="validateField('confirmPassword')"
               />
-              <div v-if="errors.confirmPassword" class="error-msg">
-                {{ errors.confirmPassword }}
-              </div>
+              <div v-if="errors.confirmPassword" class="error-msg">{{ errors.confirmPassword }}</div>
 
               <button
                 class="btn btn-success my-4 center-btn"
                 @click="validateSignUp"
                 :disabled="isSubmitting"
               >
-                Sign Up
+                {{ isSubmitting ? 'Signing up...' : 'Sign Up' }}
               </button>
               <p class="text-center">
                 Already have an account?
@@ -195,10 +192,12 @@
     </div>
   </footer>
 </template>
+
 <script>
 import mockstorage from '@/stores/mockstorage.js'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
+
 export default {
   data() {
     return {
@@ -212,10 +211,17 @@ export default {
       errors: {},
       showPage: false,
       isSubmitting: false,
+      debugMode: false, // For debugging authentication issues
     }
   },
   mounted() {
     this.showPage = true
+    // Check if already logged in
+    const userData = sessionStorage.getItem('userData')
+    if (userData) {
+      if (this.debugMode) console.log('User already logged in:', JSON.parse(userData))
+      this.$router.push('/dashboard')
+    }
   },
   methods: {
     toggleForm() {
@@ -228,11 +234,9 @@ export default {
       this.confirmpassword = ''
       this.phoneNumber = ''
       this.isSubmitting = false
-      localStorage.removeItem('userId')
-      localStorage.removeItem('adminEmail')
     },
+
     validateField(field) {
-      // Validate a single field for real-time feedback
       if (field === 'email') {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!this.email) {
@@ -285,44 +289,88 @@ export default {
         }
       }
     },
+
     async validateLogin() {
       this.errors = {}
       this.validateField('email')
       this.validateField('password')
+      
       if (Object.keys(this.errors).length === 0) {
         this.isSubmitting = true
         try {
-          // Admin check
+          // Admin login check
           if (this.email === 'akinbodetomiwa04@gmail.com' && this.password === 'Sammyzion04') {
-            localStorage.setItem('adminEmail', this.email)
-            localStorage.removeItem('userId')
+            const adminData = {
+              id: 'admin_01',
+              email: this.email,
+              firstName: 'Admin',
+              lastName: 'User',
+              role: 'admin',
+              broughtBooks: [],
+              borrowedBooks: [],
+              transactionHistory: [],
+              comments: [],
+              appointments: []
+            }
             
+            sessionStorage.setItem('userData', JSON.stringify(adminData))
+            if (this.debugMode) console.log('Admin login successful:', adminData)
+
+            window.dispatchEvent(new CustomEvent('user-logged-in', {
+              detail: adminData
+            }))
+
             toast.success('Admin login successful!')
             setTimeout(() => {
               this.$router.push('/admin')
             }, 1000)
             return
           }
+
           // Normal user login
           const users = await mockstorage.fetchUsers()
           const user = users.find((u) => u.email === this.email && u.password === this.password)
+          
           if (user) {
-            localStorage.setItem('userId', user.id)
-            localStorage.removeItem('adminEmail')
+            const userData = {
+              id: user.id,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              email: user.email,
+              phoneNumber: user.phoneNumber,
+              role: user.role || 'user',
+              broughtBooks: user.broughtBooks || [],
+              borrowedBooks: user.borrowedBooks || [],
+              transactionHistory: user.transactionHistory || [],
+              comments: user.comments || [],
+              appointments: user.appointments || []
+            }
+
+            sessionStorage.setItem('userData', JSON.stringify(userData))
+            if (this.debugMode) console.log('User login successful:', userData)
+
+            window.dispatchEvent(new CustomEvent('user-logged-in', {
+              detail: userData
+            }))
+
             toast.success('Login successful!')
             setTimeout(() => {
               this.$router.push('/dashboard')
             }, 1500)
           } else {
             toast.error('Invalid email or password')
+            if (this.debugMode) console.log('Login failed: Invalid credentials')
           }
         } catch (err) {
-          toast.error('Internet Error')
+          console.error('Login error:', err)
+          toast.error('Connection error. Please try again.')
+          if (this.debugMode) console.log('Login error details:', err.message)
         } finally {
           this.isSubmitting = false
         }
       }
     },
+
     async validateSignUp() {
       this.errors = {}
       this.validateField('firstName')
@@ -331,6 +379,7 @@ export default {
       this.validateField('phoneNumber')
       this.validateField('password')
       this.validateField('confirmPassword')
+
       if (Object.keys(this.errors).length === 0) {
         this.isSubmitting = true
         try {
@@ -338,26 +387,49 @@ export default {
           const exists = users.some((u) => u.email === this.email)
           if (exists) {
             toast.error('Email already exists!')
+            if (this.debugMode) console.log('Signup failed: Email exists', this.email)
             return
           }
-          await mockstorage.createUser({
+
+          const newUser = {
+            id: `user_${Date.now()}`,
             firstName: this.firstName,
             lastName: this.lastName,
             email: this.email,
             phoneNumber: this.phoneNumber,
             password: this.password,
             role: 'user',
-          })
-          toast.success('Sign up successful!')
-          this.toggleForm()
+            broughtBooks: [],
+            borrowedBooks: [],
+            transactionHistory: [],
+            comments: [],
+            appointments: []
+          }
+
+          await mockstorage.createUser(newUser)
+          
+          // Automatically log in the user after signup
+          sessionStorage.setItem('userData', JSON.stringify(newUser))
+          if (this.debugMode) console.log('Signup and auto-login successful:', newUser)
+
+          window.dispatchEvent(new CustomEvent('user-logged-in', {
+            detail: newUser
+          }))
+
+          toast.success('Sign up successful! You are now logged in.')
+          setTimeout(() => {
+            this.$router.push('/dashboard')
+          }, 1500)
         } catch (err) {
+          console.error('Signup error:', err)
           toast.error('Error connecting to server')
+          if (this.debugMode) console.log('Signup error details:', err.message)
         } finally {
           this.isSubmitting = false
         }
       }
-    },
-  },
+    }
+  }
 }
 </script>
 
@@ -439,7 +511,6 @@ label {
     padding: 0;
     overflow: scroll;
   }
-
   .imageAspect {
     display: none;
   }
