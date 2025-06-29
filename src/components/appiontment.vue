@@ -28,13 +28,13 @@
           <span :class="getStatusBadgeClass(app.status)">
             {{ app.status }}
           </span>
-        <button 
+        <!-- <button 
         class="btn btn-danger btn-sm" 
         @click="deleteAppointment(app.id)"
         :disabled="isLoading"
       >
         <i class="fas fa-trash"></i>
-      </button>
+      </button> -->
         </div>
       </li>
     </ul>
@@ -146,7 +146,7 @@ export default {
           subject: this.appointment.subject,
           details: this.appointment.details,
           date: new Date(this.appointment.date).toISOString(),
-          status: 'pending'
+          status: 'succesful'
         }
 
         // Save appointment using mockstorage service

@@ -13,26 +13,18 @@
       "transactionHistory": [],
       "comments": [],
       "appointments": [
+   
         {
-          "subject": "dfghj",
-          "details": "ertyj",
-          "date": "2025-06-29T13:37:00.000Z",
-          "status": "pending",
+          "subject": "tyuio",
+          "details": "fyui",
+          "date": "2025-06-29T13:59:00.000Z",
+          "status": "succesful",
           "userId": "user_1751091168293",
-          "id": "apt_user_1751091168293_1751204227012",
-          "createdAt": "2025-06-29T13:37:07.012Z"
-        },
-        {
-          "subject": "dtyui",
-          "details": "sdrtyuio",
-          "date": "2025-06-29T13:49:00.000Z",
-          "status": "pending",
-          "userId": "user_1751091168293",
-          "id": "apt_user_1751091168293_1751204960481",
-          "createdAt": "2025-06-29T13:49:20.481Z"
+          "id": "apt_user_1751091168293_1751205584647",
+          "createdAt": "2025-06-29T13:59:44.647Z"
         }
       ],
-      "updatedAt": "2025-06-29T13:49:20.519Z",
+      "updatedAt": "2025-06-29T13:59:44.670Z",
       "cart": [
         {
           "id": "1_0",
@@ -62,23 +54,15 @@
   ],
   "transactions": [],
   "appointments": [
+
     {
-      "id": "apt_user_1751091168293_1751204227012",
-      "subject": "dfghj",
-      "details": "ertyj",
-      "date": "2025-06-29T13:37:00.000Z",
-      "status": "pending",
+      "id": "apt_user_1751091168293_1751205584647",
+      "subject": "tyuio",
+      "details": "fyui",
+      "date": "2025-06-29T13:59:00.000Z",
+      "status": "succesful",
       "userId": "user_1751091168293",
-      "createdAt": "2025-06-29T13:37:07.012Z"
-    },
-    {
-      "id": "apt_user_1751091168293_1751204960481",
-      "subject": "dtyui",
-      "details": "sdrtyuio",
-      "date": "2025-06-29T13:49:00.000Z",
-      "status": "pending",
-      "userId": "user_1751091168293",
-      "createdAt": "2025-06-29T13:49:20.481Z"
+      "createdAt": "2025-06-29T13:59:44.647Z"
     }
   ],
   "comments": []
