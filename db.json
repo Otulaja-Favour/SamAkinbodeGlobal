@@ -12,13 +12,38 @@
       "borrowedBooks": [],
       "transactionHistory": [],
       "comments": [],
-      "appointments": [],
-      "createdAt": "2025-06-28T06:12:48.293Z",
-      "updatedAt": "2025-06-29T12:14:58.879Z",
-      "cart": [],
-      "firstname": "otulaja",
-      "lastname": "favour",
-      "age": "2006-01-18"
+      "appointments": [
+        {
+          "subject": "dfghj",
+          "details": "ertyj",
+          "date": "2025-06-29T13:37:00.000Z",
+          "status": "pending",
+          "userId": "user_1751091168293",
+          "id": "apt_user_1751091168293_1751204227012",
+          "createdAt": "2025-06-29T13:37:07.012Z"
+        },
+        {
+          "subject": "dtyui",
+          "details": "sdrtyuio",
+          "date": "2025-06-29T13:49:00.000Z",
+          "status": "pending",
+          "userId": "user_1751091168293",
+          "id": "apt_user_1751091168293_1751204960481",
+          "createdAt": "2025-06-29T13:49:20.481Z"
+        }
+      ],
+      "updatedAt": "2025-06-29T13:49:20.519Z",
+      "cart": [
+        {
+          "id": "1_0",
+          "title": "Prepare discussion large.",
+          "author": "Marissa Williams",
+          "image": "https://placekitten.com/310/391",
+          "action": "borrow",
+          "price": 952,
+          "dateAdded": "2025-06-29T13:44:44.929Z"
+        }
+      ]
     }
   ],
   "books": [
@@ -36,6 +61,25 @@
     }
   ],
   "transactions": [],
-  "appointments": [],
+  "appointments": [
+    {
+      "id": "apt_user_1751091168293_1751204227012",
+      "subject": "dfghj",
+      "details": "ertyj",
+      "date": "2025-06-29T13:37:00.000Z",
+      "status": "pending",
+      "userId": "user_1751091168293",
+      "createdAt": "2025-06-29T13:37:07.012Z"
+    },
+    {
+      "id": "apt_user_1751091168293_1751204960481",
+      "subject": "dtyui",
+      "details": "sdrtyuio",
+      "date": "2025-06-29T13:49:00.000Z",
+      "status": "pending",
+      "userId": "user_1751091168293",
+      "createdAt": "2025-06-29T13:49:20.481Z"
+    }
+  ],
   "comments": []
 }

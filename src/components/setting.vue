@@ -1,6 +1,7 @@
 <template>
   <div>
     <h4>Settings</h4>
+    <marquee behavior="scroll" direction="Left">If you are facing any error or need to contact the admin Pls make a suggestion in the appiontment session or call the admin CALL: 09151596279</marquee>
     <form @submit.prevent="handleSaveSettings" class="mt-3" style="max-width: 400px">
       <div class="mb-3">
         <label class="form-label">First Name</label>

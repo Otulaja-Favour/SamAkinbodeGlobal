@@ -158,6 +158,8 @@ export default {
         this.books = books || []
         this.users = users || []
         this.appointments = appointments || []
+        console.log(this.appointments);
+        
         this.transactions = transactions || []
         this.comments = comments || []
         

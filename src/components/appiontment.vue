@@ -1,6 +1,8 @@
 <template>
   <div>
     <h4>Appointments</h4>
+    <marquee behavior="scroll" direction="Left">If you are facing any issue just reload the page your data are secured</marquee>
+
     <button class="btn btn-primary mb-3" @click="handleCreateClick">
       <i class="fas fa-calendar-plus"></i> Create Appointment
     </button>
@@ -26,6 +28,13 @@
           <span :class="getStatusBadgeClass(app.status)">
             {{ app.status }}
           </span>
+        <button 
+        class="btn btn-danger btn-sm" 
+        @click="deleteAppointment(app.id)"
+        :disabled="isLoading"
+      >
+        <i class="fas fa-trash"></i>
+      </button>
         </div>
       </li>
     </ul>
@@ -88,23 +97,30 @@ export default {
 
   methods: {
     async initialize() {
-      const userDataStr = sessionStorage.getItem('userData')
-      if (userDataStr) {
-        this.userData = JSON.parse(userDataStr)
-        await this.loadAppointments()
+      try {
+        const userData = await mockstorage.getCurrentUser()
+        if (userData) {
+          this.userData = userData
+          await this.loadAppointments()
+        }
+      } catch (error) {
+        console.error('Failed to initialize:', error)
       }
     },
 
     async loadAppointments() {
       try {
-        const db = JSON.parse(sessionStorage.getItem('db') || '{"appointments":[]}')
-        this.userAppointments = db.appointments.filter(app => app.userId === this.userData.id) || []
+        // Get all appointments from server
+        const appointments = await mockstorage.fetchAllAppointments()
+        // Filter for current user
+        this.userAppointments = appointments.filter(app => app.userId === this.userData.id)
       } catch (error) {
         console.error('Failed to load appointments:', error)
         toast.error('Failed to load appointments')
       }
     },
 
+    
     handleCreateClick() {
       if (!this.userData) {
         toast.warning('Please login to create appointments')
@@ -127,33 +143,27 @@ export default {
       this.isLoading = true
       try {
         const newAppointment = {
-          id: `app_${Date.now()}`,
-          userId: this.userData.id,
           subject: this.appointment.subject,
           details: this.appointment.details,
           date: new Date(this.appointment.date).toISOString(),
-          createdAt: new Date().toISOString(),
           status: 'pending'
         }
 
-        // Get current database
-        const db = JSON.parse(sessionStorage.getItem('db') || '{"appointments":[]}')
-        if (!Array.isArray(db.appointments)) {
-          db.appointments = []
-        }
+        // Save appointment using mockstorage service
+        const savedAppointment = await mockstorage.saveAppointment(
+          this.userData.id, 
+          newAppointment
+        )
 
-        // Add appointment
-        db.appointments.push(newAppointment)
-        
-        // Save to session storage
-        sessionStorage.setItem('db', JSON.stringify(db))
-
-        // Update local state
-        this.userAppointments.push(newAppointment)
+        // Update local state with saved appointment
+        this.userAppointments.push(savedAppointment)
         
         // Reset and close
         this.closeModal()
         toast.success('Appointment created successfully!')
+
+        // Refresh appointments to ensure sync
+        await this.loadAppointments()
       } catch (error) {
         console.error('Failed to create appointment:', error)
         toast.error('Failed to create appointment')
