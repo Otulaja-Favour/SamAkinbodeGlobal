@@ -37,20 +37,20 @@
         <div v-else-if="adminTab === 'profile'">
           <nav class="profile-navbar mb-3">
             <button
-              class="btn btn-outline-primary me-2"
+              class="btn btn-outline-primary me-2 my-4"
               :class="{ active: profileTab === 'details' }"
               @click="profileTab = 'details'"
             >
               Details
             </button>
             <button
-              class="btn btn-outline-primary me-2"
+              class="btn btn-outline-primary me-2 my-4"
               :class="{ active: profileTab === 'edit' }"
               @click="profileTab = 'edit'"
             >
               Edit Profile
             </button>
-            <button class="btn btn-outline-danger" @click="logout">Logout</button>
+            <button class="btn btn-outline-danger my-4" @click="logout">Logout</button>
           </nav>
           
           <div v-if="profileTab === 'details'">
@@ -129,8 +129,8 @@ export default {
       
       // Admin profile
       adminProfile: {
-        name: 'Admin',
-        email: 'admin@bookvault.com'
+        name: 'Sam akinbode',
+        email: 'akinbodetomiwa04@gmail.com'
       }
     }
   },

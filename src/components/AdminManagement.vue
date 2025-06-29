@@ -2,7 +2,7 @@
   <div>
     <!-- Books Management -->
     <div v-if="activeSection === 'books'">
-      <h3 class="mb-4">Manage Book Store</h3>
+      <h3 class="mb-4 my-4">Manage Book Store</h3>
       <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
         <input
           v-model="bookSearch"
@@ -193,7 +193,7 @@
 
     <!-- Users Management -->
     <div v-else-if="activeSection === 'users'">
-      <h3 class="mb-4">All Users</h3>
+      <h3 class="mb-4 my-4">All Users</h3>
       <div v-if="users.length === 0" class="alert alert-info">No users found.</div>
       <div class="table-responsive" v-else>
         <table class="table table-bordered table-hover align-middle">
@@ -278,7 +278,7 @@
 
     <!-- Transactions -->
     <div v-else-if="activeSection === 'transactions'">
-      <h3 class="mb-4">All Transactions</h3>
+      <h3 class="mb-4 my-4">All Transactions</h3>
       <input
         v-model="transactionDateFilter"
         type="date"

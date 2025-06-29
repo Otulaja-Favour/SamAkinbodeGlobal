@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h3 class="mb-4">Welcome, {{ adminProfile.name }}!</h3>
+    <h3 class="mb-4 my-4">Welcome, {{ adminProfile.name }}!</h3>
     
     <!-- Statistics Cards -->
     <div class="row g-3 mb-4">

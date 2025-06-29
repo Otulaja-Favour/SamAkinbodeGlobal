@@ -5,6 +5,7 @@
         <i class="fas fa-user-shield"></i> Admin Panel
       </RouterLink>
       
+      
       <!-- Desktop Navigation -->
       <div class="navbar-nav d-none d-lg-flex flex-row ms-auto">
         <button
@@ -90,5 +91,6 @@ export default {
     padding: 8px;
     font-size: 1.2rem;
   }
+  
 }
 </style>
