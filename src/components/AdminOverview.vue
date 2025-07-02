@@ -114,22 +114,46 @@ export default {
       
       // Add recent transactions
       this.transactions.slice(0, 3).forEach(tx => {
-        const userName = this.getUserName(tx.userId)
-        activities.push({
-          type: 'Transaction',
-          detail: `${tx.type} - ${tx.title || 'Book'} (₦${tx.amount}) by ${userName}`,
-          date: tx.date || new Date().toISOString()
-        })
+        if (tx && typeof tx === 'object') {
+          const userName = this.getUserName(tx.userId) || 'Unknown User'
+          const txType = tx.type || 'Transaction'
+          const txTitle = tx.title || tx.bookTitle || 'Unknown Item'
+          const txAmount = tx.amount || tx.price || 0
+          
+          activities.push({
+            type: 'Transaction',
+            detail: `${txType} - ${txTitle} (₦${txAmount}) by ${userName}`,
+            date: tx.date || tx.createdAt || new Date().toISOString()
+          })
+        }
       })
       
       // Add recent appointments
       this.appointments.slice(0, 2).forEach(app => {
-        const userName = this.getUserName(app.userId)
-        activities.push({
-          type: 'Appointment',
-          detail: `${app.subject} by ${userName}`,
-          date: app.date || new Date().toISOString()
-        })
+        if (app && typeof app === 'object') {
+          const userName = this.getUserName(app.userId) || 'Unknown User'
+          const subject = app.subject || 'Appointment'
+          
+          activities.push({
+            type: 'Appointment',
+            detail: `${subject} by ${userName}`,
+            date: app.date || app.createdAt || new Date().toISOString()
+          })
+        }
+      })
+      
+      // Add recent comments
+      this.comments.slice(0, 2).forEach(comment => {
+        if (comment && typeof comment === 'object') {
+          const userName = this.getUserName(comment.userId) || 'Unknown User'
+          const commentText = comment.text || comment.content || 'New comment'
+          
+          activities.push({
+            type: 'Comment',
+            detail: `Comment by ${userName}: ${commentText.substring(0, 50)}${commentText.length > 50 ? '...' : ''}`,
+            date: comment.date || comment.createdAt || new Date().toISOString()
+          })
+        }
       })
       
       // Sort by date and return formatted strings
@@ -148,46 +172,67 @@ export default {
   },
   methods: {
     getUserName(userId) {
-      const user = this.users.find(u => u.id === userId)
-      return user ? `${user.firstname || ''} ${user.lastname || ''}`.trim() : `User ${userId}`
+      if (!userId) return 'Unknown User'
+      
+      const user = this.users.find(u => u && u.id === userId)
+      if (!user) return `User #${userId}`
+      
+      const firstName = user.firstname || user.firstName || ''
+      const lastName = user.lastname || user.lastName || ''
+      const fullName = `${firstName} ${lastName}`.trim()
+      
+      return fullName || user.email || user.username || `User #${userId}`
     },
     formatDate(dateString) {
       if (!dateString) return 'N/A'
-      return new Date(dateString).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+      
+      try {
+        const date = new Date(dateString)
+        if (isNaN(date.getTime())) return 'Invalid Date'
+        
+        return date.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      } catch (error) {
+        console.warn('Date formatting error:', error)
+        return 'Invalid Date'
+      }
     },
     checkForNewUpdates() {
-      const lastSeen = sessionStorage.getItem('adminLastSeen')
-      const lastSeenTime = lastSeen ? new Date(lastSeen) : new Date(Date.now() - 24 * 60 * 60 * 1000) // 24 hours ago
-      
-      // Check for new items since last seen
-      this.newInfoSummary.users = this.users.filter(u => 
-        u.createdAt && new Date(u.createdAt) > lastSeenTime
-      )
-      
-      this.newInfoSummary.appointments = this.appointments.filter(a => 
-        a.date && new Date(a.date) > lastSeenTime
-      )
-      
-      this.newInfoSummary.transactions = this.transactions.filter(t => 
-        t.date && new Date(t.date) > lastSeenTime
-      )
-      
-      this.newInfoSummary.comments = this.comments.filter(c => 
-        c.date && new Date(c.date) > lastSeenTime
-      )
-      
-      // Show modal if there are new updates
-      if (this.hasNewUpdates) {
-        this.showNewInfoModal = true
+      try {
+        const lastSeen = sessionStorage.getItem('adminLastSeen')
+        const lastSeenTime = lastSeen ? new Date(lastSeen) : new Date(Date.now() - 24 * 60 * 60 * 1000) // 24 hours ago
+        
+        // Check for new items since last seen - with safe array handling
+        this.newInfoSummary.users = (this.users || []).filter(u => 
+          u && u.createdAt && new Date(u.createdAt) > lastSeenTime
+        )
+        
+        this.newInfoSummary.appointments = (this.appointments || []).filter(a => 
+          a && a.date && new Date(a.date) > lastSeenTime
+        )
+        
+        this.newInfoSummary.transactions = (this.transactions || []).filter(t => 
+          t && (t.date || t.createdAt) && new Date(t.date || t.createdAt) > lastSeenTime
+        )
+        
+        this.newInfoSummary.comments = (this.comments || []).filter(c => 
+          c && (c.date || c.createdAt) && new Date(c.date || c.createdAt) > lastSeenTime
+        )
+        
+        // Show modal if there are new updates
+        if (this.hasNewUpdates) {
+          this.showNewInfoModal = true
+        }
+        
+        // Update last seen time
+        sessionStorage.setItem('adminLastSeen', new Date().toISOString())
+      } catch (error) {
+        console.error('Error checking for new updates:', error)
       }
-      
-      // Update last seen time
-      sessionStorage.setItem('adminLastSeen', new Date().toISOString())
     }
   }
 }

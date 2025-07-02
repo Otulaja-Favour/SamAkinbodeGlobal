@@ -11,30 +11,48 @@
           <RouterLink class="nav-link" to="/books"><i class="fas fa-book"></i> Books</RouterLink>
           <RouterLink class="nav-link position-relative" to="/cart">
             <i class="fas fa-shopping-cart"></i> Cart
-            <span v-if="cartCount > 0" class="badge bg-danger position-absolute top-0 start-100 translate-middle">
+            <span
+              v-if="cartCount > 0"
+              class="badge bg-danger position-absolute top-0 start-100 translate-middle"
+            >
               {{ cartCount }}
             </span>
           </RouterLink>
-          <RouterLink class="nav-link" to="/profile"><i class="fas fa-user"></i> Profile</RouterLink>
-          <RouterLink class="nav-link" to="/"><i class="fas fa-sign-out-alt"></i> Logout</RouterLink>
+          <RouterLink class="nav-link" to="/profile"
+            ><i class="fas fa-user"></i> Profile</RouterLink
+          >
+          <RouterLink class="nav-link" to="/"
+            ><i class="fas fa-sign-out-alt"></i> Logout</RouterLink
+          >
         </div>
       </div>
     </nav>
 
     <!-- Mobile Navbar fixed at the bottom -->
-    <nav class="navbar navbar-mobile d-flex d-lg-none ">
+    <nav class="navbar navbar-mobile d-flex d-lg-none">
       <div class="navbar-nav d-flex flex-row w-100 justify-content-around">
-        <RouterLink class="nav-link" to="/dashboard"><i class="fas fa-home"></i><span>Home</span></RouterLink>
-        <RouterLink class="nav-link" to="/books"><i class="fas fa-book"></i><span>Books</span></RouterLink>
+        <RouterLink class="nav-link" to="/dashboard"
+          ><i class="fas fa-home"></i><span>Home</span></RouterLink
+        >
+        <RouterLink class="nav-link" to="/books"
+          ><i class="fas fa-book"></i><span>Books</span></RouterLink
+        >
         <RouterLink class="nav-link position-relative" to="/cart">
           <i class="fas fa-shopping-cart"></i>
-          <span v-if="cartCount > 0" class="badge bg-danger position-absolute top-0 start-100 translate-middle">
+          <span
+            v-if="cartCount > 0"
+            class="badge bg-danger position-absolute top-0 start-100 translate-middle"
+          >
             {{ cartCount }}
           </span>
           <span>Cart</span>
         </RouterLink>
-        <RouterLink class="nav-link" to="/profile"><i class="fas fa-user"></i><span>Profile</span></RouterLink>
-        <RouterLink class="nav-link" to="/"><i class="fas fa-sign-out-alt"></i><span>Logout</span></RouterLink>
+        <RouterLink class="nav-link" to="/profile"
+          ><i class="fas fa-user"></i><span>Profile</span></RouterLink
+        >
+        <RouterLink class="nav-link" to="/"
+          ><i class="fas fa-sign-out-alt"></i><span>Logout</span></RouterLink
+        >
       </div>
     </nav>
   </div>
@@ -44,27 +62,28 @@
 export default {
   data() {
     return {
-      cartCount: 0
+      cartCount: 0,
     }
   },
   mounted() {
     // Initialize from localStorage
-    this.updateCartCount();
+    this.updateCartCount()
     // Listen for cart updates from anywhere
-    window.addEventListener('cart-updated', this.handleCartUpdate);
+    window.addEventListener('cart-updated', this.handleCartUpdate)
   },
   beforeUnmount() {
-    window.removeEventListener('cart-updated', this.handleCartUpdate);
+    window.removeEventListener('cart-updated', this.handleCartUpdate)
   },
   methods: {
     handleCartUpdate(e) {
-      this.cartCount = e.detail;
+      this.cartCount = e.detail
     },
     updateCartCount() {
-      const cart = JSON.parse(localStorage.getItem('cart')) || [];
-      this.cartCount = cart.length;
-    }
-  }
+      // Use sessionStorage to match cart component
+      const cart = JSON.parse(sessionStorage.getItem('cart')) || []
+      this.cartCount = cart.length
+    },
+  },
 }
 </script>
 

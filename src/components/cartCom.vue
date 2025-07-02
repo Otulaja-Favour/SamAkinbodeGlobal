@@ -41,12 +41,12 @@
           <tbody>
             <tr v-for="(item, idx) in cart" :key="`cart-${idx}-${item.id || idx}`">
               <td>
-                <img 
+                <!-- <img 
                   :src="getImageUrl(item.image)" 
                   alt="Book cover" 
                   class="cart-img"
                   @error="handleImageError"
-                />
+                /> -->
               </td>
               <td>{{ item.title || 'Unknown Title' }}</td>
               <td class="text-capitalize">
@@ -300,18 +300,7 @@ export default {
           this.cart = JSON.parse(sessionCart)
         }
 
-        // Try to sync with server cart
-        try {
-          const serverCart = await mockstorage.getUserCart(this.userId)
-          if (serverCart?.length) {
-            this.cart = serverCart
-            sessionStorage.setItem('cart', JSON.stringify(serverCart))
-          } else if (this.cart.length) {
-            await mockstorage.saveUserCart(this.userId, this.cart)
-          }
-        } catch (error) {
-          console.warn('Server cart sync failed:', error)
-        }
+   
 
         this.updateCartCount()
       } catch (error) {
@@ -339,7 +328,7 @@ export default {
         this.cart = []
         sessionStorage.removeItem('cart')
         if (this.userId) {
-          await mockstorage.saveUserCart(this.userId, [])
+          // await mockstorage.saveUserCart(this.userId, [])
         }
         this.updateCartCount()
         toast.success('Cart cleared')
@@ -349,18 +338,18 @@ export default {
       }
     },
 
-    async syncCart() {
-      try {
-        sessionStorage.setItem('cart', JSON.stringify(this.cart))
-        if (this.userId) {
-          await mockstorage.saveUserCart(this.userId, this.cart)
-        }
-        this.updateCartCount()
-      } catch (error) {
-        console.error('Cart sync failed:', error)
-        toast.error('Failed to sync cart')
-      }
-    },
+    // async syncCart() {
+    //   try {
+    //     // sessionStorage.setItem('cart', JSON.stringify(this.cart))
+    //     if (this.userId) {
+    //       // await mockstorage.saveUserCart(this.userId, this.cart)
+    //     }
+    //     this.updateCartCount()
+    //   } catch (error) {
+    //     console.error('Cart sync failed:', error)
+    //     toast.error('Failed to sync cart')
+    //   }
+    // },
 
     // Checkout Methods
     async checkoutDirect() {
@@ -494,18 +483,18 @@ export default {
 
   mounted() {
     // Listen for cart updates from other components
-    window.addEventListener('cart-updated', this.loadCart)
-    window.addEventListener('user-logged-in', (event) => {
-      this.userId = event.detail.id
-      this.userData = event.detail
-      this.userEmail = event.detail.email
-      this.loadCart()
-    })
+    // window.addEventListener('cart-updated', this.loadCart)
+    // window.addEventListener('user-logged-in', (event) => {
+    //   this.userId = event.detail.id
+    //   this.userData = event.detail
+    //   this.userEmail = event.detail.email
+    //   this.loadCart()
+    // })
   },
 
   beforeUnmount() {
-    window.removeEventListener('cart-updated', this.loadCart)
-    this.syncCart()
+    // window.removeEventListener('cart-updated', this.loadCart)
+    // this.syncCart()
   }
 }
 </script>

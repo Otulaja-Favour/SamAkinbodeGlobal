@@ -2,7 +2,7 @@ import axios from "axios"
 
 // Configuration
 const CONFIG = {
-  BASE_URL: "http://localhost:3000",
+  BASE_URL: "https://samapi-juio.onrender.com",
   TIMEOUT: 10000,
 }
 
@@ -23,10 +23,10 @@ export default {
     try {
       // Check if server is running
       const response = await axios.get(`${CONFIG.BASE_URL}/users`)
-      console.log("Database connection successful")
+      // console.log("Database connection successful")
       return true
     } catch (error) {
-      console.error("Failed to connect to database:", error.message)
+      // console.error("Failed to connect to database:", error.message)
       return false
     }
   },
@@ -37,21 +37,21 @@ export default {
       const res = await axios.get(ENDPOINTS.USERS)
       return Array.isArray(res.data) ? res.data : []
     } catch (err) {
-      console.error("Fetch users failed:", err.message)
+      // console.error("Fetch users failed:", err.message)
       return []
     }
   },
 
   async fetchUser(id) {
     if (!id) {
-      console.error("Fetch user failed: User ID is required")
+      // console.error("Fetch user failed: User ID is required")
       return null
     }
     try {
       const res = await axios.get(`${ENDPOINTS.USERS}/${id}`)
       return res.data || null
     } catch (err) {
-      console.error(`Fetch user failed for ID ${id}:`, err.message)
+      // console.error(`Fetch user failed for ID ${id}:`, err.message)
       return null
     }
   },
@@ -72,10 +72,10 @@ export default {
         cart: [],
       }
       const res = await axios.post(ENDPOINTS.USERS, userData)
-      console.log(`User created successfully: ${userData.id}`)
+      // console.log(`User created successfully: ${userData.id}`)
       return res.data || userData
     } catch (err) {
-      console.error("Create user failed:", err.message)
+      // console.error("Create user failed:", err.message)
       throw new Error("Failed to create user")
     }
   },
@@ -92,10 +92,10 @@ export default {
         updatedAt: new Date().toISOString(),
       }
       const res = await axios.put(`${ENDPOINTS.USERS}/${id}`, updatedUser)
-      console.log(`User updated successfully: ${id}`)
+      // console.log(`User updated successfully: ${id}`)
       return res.data || updatedUser
     } catch (err) {
-      console.error(`Update user failed for ID ${id}:`, err.message)
+      // console.error(`Update user failed for ID ${id}:`, err.message)
       throw new Error("Failed to update user")
     }
   },
@@ -103,10 +103,10 @@ export default {
   async deleteUser(id) {
     try {
       await axios.delete(`${ENDPOINTS.USERS}/${id}`)
-      console.log(`User deleted successfully: ${id}`)
+      // console.log(`User deleted successfully: ${id}`)
       return { success: true }
     } catch (err) {
-      console.error(`Delete user failed for ID ${id}:`, err.message)
+      // console.error(`Delete user failed for ID ${id}:`, err.message)
       throw new Error("Failed to delete user")
     }
   },
@@ -117,7 +117,7 @@ export default {
       const res = await axios.get(ENDPOINTS.BOOKS)
       return Array.isArray(res.data) ? res.data : []
     } catch (err) {
-      console.error("Fetch all books failed:", err.message)
+      // console.error("Fetch all books failed:", err.message)
       return []
     }
   },
@@ -130,10 +130,10 @@ export default {
         dateAdded: new Date().toISOString(),
       }
       const res = await axios.post(ENDPOINTS.BOOKS, newBook)
-      console.log(`Book added successfully: ${newBook.id}`)
+      // console.log(`Book added successfully: ${newBook.id}`)
       return res.data || newBook
     } catch (err) {
-      console.error("Add book failed:", err.message)
+      // console.error("Add book failed:", err.message)
       throw new Error("Failed to add book")
     }
   },
@@ -141,10 +141,10 @@ export default {
   async updateBook(id, bookData) {
     try {
       const res = await axios.put(`${ENDPOINTS.BOOKS}/${id}`, bookData)
-      console.log(`Book updated successfully: ${id}`)
+      // console.log(`Book updated successfully: ${id}`)
       return res.data || bookData
     } catch (err) {
-      console.error(`Update book failed for ID ${id}:`, err.message)
+      // console.error(`Update book failed for ID ${id}:`, err.message)
       throw new Error("Failed to update book")
     }
   },
@@ -152,10 +152,10 @@ export default {
   async deleteBook(id) {
     try {
       await axios.delete(`${ENDPOINTS.BOOKS}/${id}`)
-      console.log(`Book deleted successfully: ${id}`)
+      // console.log(`Book deleted successfully: ${id}`)
       return { success: true }
     } catch (err) {
-      console.error(`Delete book failed for ID ${id}:`, err.message)
+      // console.error(`Delete book failed for ID ${id}:`, err.message)
       throw new Error("Failed to delete book")
     }
   },
@@ -190,10 +190,10 @@ export default {
         await this.updateUser(userId, updatedUser)
       }
 
-      console.log(`Transaction saved successfully: ${formattedTransaction.id}`)
+      // console.log(`Transaction saved successfully: ${formattedTransaction.id}`)
       return response.data
     } catch (error) {
-      console.error(`Failed to save transaction for user ${userId}:`, error.message)
+      // console.error(`Failed to save transaction for user ${userId}:`, error.message)
       throw new Error(`Failed to save transaction: ${error.message}`)
     }
   },
@@ -203,7 +203,7 @@ export default {
       const res = await axios.get(ENDPOINTS.TRANSACTIONS)
       return Array.isArray(res.data) ? res.data : []
     } catch (err) {
-      console.error("Fetch all transactions failed:", err.message)
+      // console.error("Fetch all transactions failed:", err.message)
       return []
     }
   },
@@ -289,14 +289,14 @@ export default {
       // Update user
       const savedUser = await this.updateUser(userId, updatedUser)
 
-      console.log(`Purchase processed successfully for user ${userId}`)
+      // console.log(`Purchase processed successfully for user ${userId}`)
       return {
         success: true,
         transaction,
         user: savedUser,
       }
     } catch (error) {
-      console.error(`Failed to process purchase for user ${userId}:`, error.message)
+      // console.error(`Failed to process purchase for user ${userId}:`, error.message)
       throw new Error(`Failed to process purchase: ${error.message}`)
     }
   },
@@ -307,7 +307,7 @@ export default {
       const user = await this.fetchUser(userId)
       return Array.isArray(user?.cart) ? user.cart : []
     } catch (error) {
-      console.error(`Failed to get user cart for user ${userId}:`, error.message)
+      // console.error(`Failed to get user cart for user ${userId}:`, error.message)
       return []
     }
   },
@@ -324,10 +324,10 @@ export default {
         updatedAt: new Date().toISOString(),
       }
       await this.updateUser(userId, updatedUser)
-      console.log(`Cart saved successfully for user ${userId}`)
+      // console.log(`Cart saved successfully for user ${userId}`)
       return true
     } catch (error) {
-      console.error(`Failed to save user cart for user ${userId}:`, error.message)
+      // console.error(`Failed to save user cart for user ${userId}:`, error.message)
       throw new Error(`Failed to save user cart: ${error.message}`)
     }
   },
@@ -360,10 +360,10 @@ export default {
         await this.updateUser(userId, updatedUser)
       }
 
-      console.log(`Appointment saved successfully: ${appointmentData.id}`)
+      // console.log(`Appointment saved successfully: ${appointmentData.id}`)
       return res.data || appointmentData
     } catch (err) {
-      console.error(`Save appointment failed for user ${userId}:`, err.message)
+      // console.error(`Save appointment failed for user ${userId}:`, err.message)
       throw new Error("Failed to save appointment")
     }
   },
@@ -373,7 +373,7 @@ export default {
       const res = await axios.get(ENDPOINTS.APPOINTMENTS)
       return Array.isArray(res.data) ? res.data : []
     } catch (err) {
-      console.error("Fetch all appointments failed:", err.message)
+      // console.error("Fetch all appointments failed:", err.message)
       return []
     }
   },
@@ -405,10 +405,10 @@ export default {
         await this.updateUser(userId, updatedUser)
       }
 
-      console.log(`Comment saved successfully: ${commentData.id}`)
+      // console.log(`Comment saved successfully: ${commentData.id}`)
       return res.data || commentData
     } catch (err) {
-      console.error(`Save comment failed for user ${userId}:`, err.message)
+      // console.error(`Save comment failed for user ${userId}:`, err.message)
       throw new Error("Failed to save comment")
     }
   },
@@ -418,7 +418,7 @@ export default {
       const res = await axios.get(ENDPOINTS.COMMENTS)
       return Array.isArray(res.data) ? res.data : []
     } catch (err) {
-      console.error("Fetch all comments failed:", err.message)
+      // console.error("Fetch all comments failed:", err.message)
       return []
     }
   },
@@ -434,7 +434,7 @@ export default {
       }
       return null
     } catch (err) {
-      console.error("Fetch current user failed:", err.message)
+      // console.error("Fetch current user failed:", err.message)
       return null
     }
   },
@@ -442,7 +442,7 @@ export default {
   logout() {
     sessionStorage.removeItem("userData")
     sessionStorage.removeItem("cart")
-    console.log("User logged out")
+    // console.log("User logged out")
     return Promise.resolve(true)
   },
 

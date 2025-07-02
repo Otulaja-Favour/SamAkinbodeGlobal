@@ -34,7 +34,7 @@
               <span class="badge bg-info">Return in: {{ getCountdown(book.bookId || book.id) }}</span>
             </div>
             <div class="d-flex align-items-center mt-2 gap-2">
-              <button class="btn btn-outline-primary btn-sm" @click="$emit('view-book', book)">
+              <button class="btn btn-outline-primary btn-sm" @click="viewBook(book)">
                 <i class="fas fa-eye"></i> Read
               </button>
               <button
@@ -72,13 +72,30 @@
           <i class="fas fa-times"></i> Close Reading View
         </button>
       </div>
-      <iframe
-        v-if="selectedBook.pdfUrl"
-        :src="selectedBook.pdfUrl"
-        class="book-iframe"
-        frameborder="0"
-      ></iframe>
-      <div v-else class="alert alert-warning">No PDF available for this book.</div>
+      <div v-if="selectedBook.pdfUrl || selectedBook.link || selectedBook.url" class="book-viewer">
+        <iframe
+          :src="getBookViewUrl(selectedBook)"
+          class="book-iframe"
+          frameborder="0"
+          allowfullscreen
+          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+        ></iframe>
+        <div class="mt-2">
+          <small class="text-muted">
+            <i class="fas fa-external-link-alt"></i>
+            <a :href="getBookViewUrl(selectedBook)" target="_blank" class="ms-1">
+              Open in new tab
+            </a>
+          </small>
+        </div>
+      </div>
+      <div v-else class="alert alert-warning">
+        No PDF or reading link available for this book.
+        <br>
+        <small class="text-muted">Book ID: {{ selectedBook.bookId || selectedBook.id }}</small>
+        <br>
+        <small class="text-muted">Available properties: {{ Object.keys(selectedBook).join(', ') }}</small>
+      </div>
     </div>
   </div>
 </template>
@@ -116,6 +133,45 @@ export default {
     },
     getCountdown(bookId) {
       return this.countdownDisplays[bookId] || 'No timer'
+    },
+    viewBook(book) {
+      console.log('Viewing book:', book)
+      console.log('Available book properties:', Object.keys(book))
+      console.log('PDF URL:', book.pdfUrl)
+      console.log('Link:', book.link)
+      console.log('URL:', book.url)
+      
+      // Check if book has a viewable link
+      const viewableUrl = book.pdfUrl || book.link || book.url
+      if (viewableUrl) {
+        console.log('Using URL:', viewableUrl)
+      } else {
+        console.warn('No viewable URL found for book:', book.title)
+      }
+      
+      this.$emit('view-book', book)
+    },
+    getBookViewUrl(book) {
+      // Priority order: pdfUrl, link, url
+      const url = book.pdfUrl || book.link || book.url
+      
+      if (!url) return ''
+      
+      // If it's a Google Drive link, convert to embeddable format
+      if (url.includes('drive.google.com') && url.includes('/file/d/')) {
+        const fileId = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/)?.[1]
+        if (fileId) {
+          return `https://drive.google.com/file/d/${fileId}/preview`
+        }
+      }
+      
+      // If it's a Google Docs link, add embed parameter
+      if (url.includes('docs.google.com')) {
+        return url.includes('?') ? `${url}&embedded=true` : `${url}?embedded=true`
+      }
+      
+      // For other URLs, return as is
+      return url
     }
   }
 }
@@ -137,12 +193,18 @@ export default {
   z-index: 100;
 }
 
+.book-viewer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .book-iframe {
   width: 100%;
   height: 76vh;
   border: none;
   border-radius: 4px;
-  overflow-y: scroll;
+  flex-grow: 1;
 }
 
 @media (max-width: 900px) {

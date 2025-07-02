@@ -232,7 +232,7 @@ export default {
     async syncCart() {
       if (!this.userId) return
       try {
-        await mockstorage.saveUserCart(this.userId, this.cart)
+        // await mockstorage.saveUserCart(this.userId, this.cart)
       } catch (error) {
         console.error('Failed to sync cart:', error)
         this.showToast('Failed to sync cart with server', true)
